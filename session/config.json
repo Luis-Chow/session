@@ -1,0 +1,30 @@
+{
+  "server": {
+    "port": 3000
+  },
+  "db": {
+    "host": "localhost",
+    "database": "web2_session",
+    "user": "postgres",
+    "password": "postgres",
+    "port": 5432,
+    "ssl": false,
+    "max": 20,
+    "idleTimeoutMillis": 30000,
+    "connectionTimeoutMillis": 2000,
+    "maxUses": 7500
+  },
+  "session": {
+    "secret": "123",
+    "resave": false,
+    "saveUninitialized": false,
+    "duration": 1800000,
+    "activeDuration": 900000,
+    "cookie": {
+      "maxAge": 1800000,
+      "secure": false,
+      "sameSite": true,
+      "httpOnly": true
+    }
+  }
+}

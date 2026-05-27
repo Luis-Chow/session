@@ -1,0 +1,12 @@
+{
+  "security": {
+    "createUserTable": "CREATE TABLE IF NOT EXISTS users (user_id SERIAL PRIMARY KEY, user_na VARCHAR(50) UNIQUE NOT NULL, user_pw VARCHAR(255) NOT NULL, profile_id INT DEFAULT 1, status_id INT DEFAULT 1, person_id INT)",
+    "getUser": "SELECT user_id, user_na, user_pw, profile_id, status_id, person_id FROM users WHERE user_na = $1 AND user_pw = $2",
+    "getDataSession": "SELECT user_id, user_na, profile_id, status_id, person_id FROM users WHERE user_na = $1",
+    "insertUser": "INSERT INTO users (user_na, user_pw, profile_id, status_id) VALUES ($1, $2, $3, $4) RETURNING user_id",
+    "listUsers": "SELECT user_id, user_na, profile_id, status_id FROM users ORDER BY user_id ASC"
+  },
+  "session": {
+    "ping": "SELECT 1 AS ok"
+  }
+}

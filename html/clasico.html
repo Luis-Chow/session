@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Método Síncrono Clásico</title>
+    <style>
+        body { font-family: sans-serif; background: #121212; color: white; padding: 50px; text-align: center; }
+        input { padding: 10px; margin-right: 10px; }
+        button { padding: 10px 20px; background: #d84315; color: white; border: none; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+    <h1>Envío Tradicional (Síncrono)</h1>
+    <p>Al hacer clic, esta página desaparecerá.</p>
+
+    <!-- EL FORMULARIO ES EL MOTOR AQUÍ -->
+    <form action="http://localhost:3000/api/clasico" method="POST">
+        
+        <!-- El atributo 'name' es vital aquí -->
+        <input type="text" name="textoDelUsuario" placeholder="Escribe algo..." required>
+        
+        <button type="submit">Enviar al Servidor</button>
+
+    </form>
+
+</body>
+</html>
