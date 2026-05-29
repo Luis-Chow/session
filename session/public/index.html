@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Demo de Sesiones</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="card">
+    <h1>Demo de Sesiones</h1>
+
+    <!-- Pestañas para alternar entre Login y Registro -->
+    <div class="tabs">
+      <button id="tabLogin" class="tab active" type="button">Iniciar sesión</button>
+      <button id="tabRegister" class="tab" type="button">Registrarse</button>
+    </div>
+
+    <!-- Formulario de Login -->
+    <form id="formLogin" class="form">
+      <label>Usuario
+        <input type="text" name="user_na" autocomplete="username" required>
+      </label>
+      <label>Contraseña
+        <input type="password" name="user_pw" autocomplete="current-password" required>
+      </label>
+      <button type="submit">Entrar</button>
+    </form>
+
+    <!-- Formulario de Registro -->
+    <form id="formRegister" class="form hidden">
+      <label>Usuario
+        <input type="text" name="user_na" autocomplete="username" required>
+      </label>
+      <label>Contraseña
+        <input type="password" name="user_pw" autocomplete="new-password" required>
+      </label>
+      <small class="hint">Mínimo 8 caracteres, sin espacios, con mayúscula, minúscula y número.</small>
+      <button type="submit">Crear cuenta</button>
+    </form>
+
+    <!-- Panel que se muestra cuando hay una sesión activa -->
+    <section id="panel" class="panel hidden">
+      <div class="panel-actions">
+        <button id="btnLogout" type="button" class="secondary">Cerrar sesión</button>
+      </div>
+    </section>
+
+    <!-- Zona de mensajes (éxito / error) -->
+    <p id="msg" class="msg"></p>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

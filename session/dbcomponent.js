@@ -31,12 +31,8 @@ class DBComponent {
         return sentences[schema][sentenceId];
     }
 
-    async connect() {
-        return await this.pool.connect();
-    }
-
     async exeQuery(sentence, params = []) {
-        const cnn = await this.connect();
+        const cnn = await this.pool.connect();
         try {
             const result = await cnn.query(sentence, params);
             return result.rows;

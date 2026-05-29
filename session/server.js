@@ -3,6 +3,7 @@ var cors = require('cors');
 var config = require('./config.json');
 var DBComponent = require('./dbcomponent');
 var Session = require('./session');
+var path = require('path');
 
 var app = express();
 
@@ -11,6 +12,8 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
 new Session(null, app);
+
+app.use(express.static(path.join(__dirname, 'public')));
 
 const db = new DBComponent();
 
@@ -28,6 +31,23 @@ app.post('/register', async (req, res) => {
     if (!user_na || !user_pw) {
         return res.status(400).json({ msg: 'Falta usuario o contraseña.' });
     }
+
+    const errors = [];
+    if (user_na.length < 3) errors.push('El usuario debe tener al menos 3 caracteres.');
+    if (/\s/.test(user_na)) errors.push('El usuario no debe contener espacios.');
+    if (user_pw.length < 8) errors.push('La contraseña debe tener al menos 8 caracteres.');
+    if (user_pw.length > 64) errors.push('La contraseña no debe superar los 64 caracteres.');
+    if (/\s/.test(user_pw)) errors.push('La contraseña no debe contener espacios.');
+    if (!/[a-z]/.test(user_pw)) errors.push('La contraseña debe incluir al menos una letra minúscula.');
+    if (!/[A-Z]/.test(user_pw)) errors.push('La contraseña debe incluir al menos una letra mayúscula.');
+    if (!/[0-9]/.test(user_pw)) errors.push('La contraseña debe incluir al menos un número.');
+    if (errors.length) {
+        return res.status(400).json({
+            msg: 'No se pudo registrar: revisa los requisitos.',
+            errors
+        });
+    }
+
     try {
         const rows = await db.exeQuery(
             db.getSentence('security', 'insertUser'),

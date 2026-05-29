@@ -1,0 +1,149 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  background: #f0f2f5;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  color: #1c1e21;
+}
+
+.card {
+  background: #fff;
+  width: 100%;
+  max-width: 360px;
+  padding: 28px;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, .08);
+}
+
+h1 {
+  font-size: 1.4rem;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.tabs {
+  display: flex;
+  margin-bottom: 20px;
+  border-bottom: 1px solid #ddd;
+}
+
+.tab {
+  flex: 1;
+  padding: 10px;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  font-size: .95rem;
+  color: #65676b;
+}
+
+.tab.active {
+  color: #1877f2;
+  border-bottom-color: #1877f2;
+  font-weight: 600;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: .85rem;
+  color: #65676b;
+}
+
+input {
+  padding: 10px;
+  border: 1px solid #ccd0d5;
+  border-radius: 8px;
+  font-size: 1rem;
+}
+
+input:focus {
+  outline: none;
+  border-color: #1877f2;
+}
+
+.hint {
+  font-size: .78rem;
+  color: #8a8d91;
+  margin-top: -4px;
+}
+
+button[type="submit"],
+.panel-actions button {
+  padding: 11px;
+  border: none;
+  border-radius: 8px;
+  background: #1877f2;
+  color: #fff;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+button[type="submit"]:hover,
+.panel-actions button:hover {
+  background: #166fe5;
+}
+
+.panel-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.panel-actions button {
+  flex: 1;
+}
+
+.panel-actions .secondary {
+  background: #e4e6eb;
+  color: #1c1e21;
+}
+
+.panel-actions .secondary:hover {
+  background: #d8dadf;
+}
+
+.panel pre {
+  background: #f0f2f5;
+  padding: 12px;
+  border-radius: 8px;
+  font-size: .8rem;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.msg {
+  margin-top: 16px;
+  text-align: center;
+  font-size: .9rem;
+  min-height: 1.2em;
+  white-space: pre-line;
+}
+
+.msg.ok {
+  color: #1a7f37;
+}
+
+.msg.error {
+  color: #d93025;
+}
+
+.hidden {
+  display: none;
+}

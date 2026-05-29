@@ -2,20 +2,17 @@ const session = require('express-session');
 const config = require('./config.json');
 const DBComponent = require('./dbcomponent');
 
-let middlewareRegistered = false;
-
 class Session {
     constructor(request, app) {
         this.req = request;
 
-        if (app && !middlewareRegistered) {
+        if (app) {
             app.use(session({
                 secret: config.session.secret,
                 resave: config.session.resave,
                 saveUninitialized: config.session.saveUninitialized,
                 cookie: config.session.cookie
             }));
-            middlewareRegistered = true;
         }
 
         this.db = new DBComponent();
