@@ -11,11 +11,11 @@ app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-new Session(null, app);
+const db = new DBComponent();
+
+Session.initMiddleware(app);
 
 app.use(express.static(path.join(__dirname, 'public')));
-
-const db = new DBComponent();
 
 (async () => {
     try {
@@ -69,7 +69,7 @@ app.post('/login', async (req, res) => {
         return res.status(400).json({ msg: 'Falta usuario o contraseña.' });
     }
     try {
-        const ses = new Session(req);
+        const ses = new Session(req, db);
         const result = await ses.login(user_na, user_pw);
         if (!result.ok) {
             return res.status(401).json({ msg: result.msg });
@@ -83,7 +83,7 @@ app.post('/login', async (req, res) => {
 
 app.post('/logout', async (req, res) => {
     try {
-        const ses = new Session(req);
+        const ses = new Session(req, db);
         await ses.logout();
         res.clearCookie('connect.sid');
         res.json({ msg: 'Sesión cerrada.' });
@@ -93,7 +93,7 @@ app.post('/logout', async (req, res) => {
 });
 
 app.get('/me', (req, res) => {
-    const ses = new Session(req);
+    const ses = new Session(req, db);
     if (!ses.sessionExist()) {
         return res.status(401).json({ msg: 'No hay sesión activa.' });
     }
@@ -101,7 +101,7 @@ app.get('/me', (req, res) => {
 });
 
 app.get('/privado', (req, res) => {
-    const ses = new Session(req);
+    const ses = new Session(req, db);
     if (!ses.sessionExist()) {
         return res.status(401).json({ msg: 'No autorizado. Inicia sesión primero.' });
     }

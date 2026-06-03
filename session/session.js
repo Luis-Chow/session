@@ -1,21 +1,25 @@
 const session = require('express-session');
 const config = require('./config.json');
-const DBComponent = require('./dbcomponent');
 
 class Session {
-    constructor(request, app) {
-        this.req = request;
-
-        if (app) {
-            app.use(session({
-                secret: config.session.secret,
-                resave: config.session.resave,
-                saveUninitialized: config.session.saveUninitialized,
-                cookie: config.session.cookie
-            }));
+    // Registra el middleware de sesión UNA sola vez, al arrancar el servidor.
+    static initMiddleware(app) {
+        if (!app) {
+            console.warn('Session.initMiddleware: no se recibió la instancia de "app"; el middleware de sesión no fue inicializado.');
+            return;
         }
+        app.use(session({
+            secret: config.session.secret,
+            resave: config.session.resave,
+            saveUninitialized: config.session.saveUninitialized,
+            cookie: config.session.cookie
+        }));
+    }
 
-        this.db = new DBComponent();
+    // Instancia ligera por petición: recibe el request y el db compartido.
+    constructor(req, db) {
+        this.req = req;
+        this.db = db;
     }
 
     sessionExist() {
@@ -26,54 +30,84 @@ class Session {
     }
 
     async authenticate(user_na, user_pw) {
-        const sentence = this.db.getSentence('security', 'getUser');
-        const rows = await this.db.exeQuery(sentence, [user_na, user_pw]);
-        if (rows.length === 0) return null;
-        return rows[0];
+        try {
+            const sentence = this.db.getSentence('security', 'getUser');
+            const rows = await this.db.exeQuery(sentence, [user_na, user_pw]);
+            if (rows.length === 0) return null;
+            return rows[0];
+        } catch (err) {
+            console.error('Error en authenticate:', err);
+            throw err;
+        }
     }
 
     async createSession(user_na) {
-        const sentence = this.db.getSentence('security', 'getDataSession');
-        const rows = await this.db.exeQuery(sentence, [user_na]);
-        if (rows.length === 0) return false;
+        try {
+            const sentence = this.db.getSentence('security', 'getDataSession');
+            const rows = await this.db.exeQuery(sentence, [user_na]);
+            if (rows.length === 0) return false;
 
-        const user = rows[0];
-        this.req.session.objectSession = {
-            user_id: user.user_id,
-            user_na: user.user_na,
-            profile_id: user.profile_id,
-            status_id: user.status_id,
-            person_id: user.person_id
-        };
-        return true;
+            const user = rows[0];
+            this.req.session.objectSession = {
+                "user_id": user.user_id,
+                "user_na": user.user_na,
+                "profile_id": user.profile_id,
+                "status_id": user.status_id,
+                "person_id": user.person_id
+            };
+            return true;
+        } catch (err) {
+            console.error('Error en createSession:', err);
+            throw err;
+        }
     }
 
     destroySession() {
         return new Promise((resolve, reject) => {
-            this.req.session.destroy((err) => {
-                if (err) return reject(err);
-                resolve();
-            });
+            try {
+                this.req.session.destroy((err) => {
+                    if (err) return reject(err);
+                    resolve();
+                });
+            } catch (err) {
+                console.error('Error en destroySession:', err);
+                reject(err);
+            }
         });
     }
 
     getDataSession() {
-        if (!this.sessionExist()) return null;
-        return this.req.session.objectSession;
+        try {
+            if (!this.sessionExist()) return null;
+            return this.req.session.objectSession;
+        } catch (err) {
+            console.error('Error en getDataSession:', err);
+            return null;
+        }
     }
 
     async login(user_na, user_pw) {
-        const user = await this.authenticate(user_na, user_pw);
-        if (!user) {
-            return { ok: false, msg: 'Credenciales inválidas.' };
+        try {
+            const user = await this.authenticate(user_na, user_pw);
+            if (!user) {
+                return { "ok": false, "msg": 'Credenciales inválidas.' };
+            }
+            await this.createSession(user_na);
+            return { "ok": true, "data": this.getDataSession() };
+        } catch (err) {
+            console.error('Error en login:', err);
+            return { "ok": false, "msg": 'Error interno del servidor.' };
         }
-        await this.createSession(user_na);
-        return { ok: true, data: this.getDataSession() };
     }
 
     async logout() {
-        await this.destroySession();
-        return { ok: true };
+        try {
+            await this.destroySession();
+            return { "ok": true };
+        } catch (err) {
+            console.error('Error en logout:', err);
+            return { "ok": false, "msg": 'Error al cerrar sesión.' };
+        }
     }
 }
 
