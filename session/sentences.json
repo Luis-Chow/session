@@ -44,6 +44,7 @@
     "seedPermAdminListProducts": "INSERT INTO permission_method (profile_id, method_id) VALUES (1, 3) ON CONFLICT DO NOTHING",
     "seedPermAdminInsertProduct": "INSERT INTO permission_method (profile_id, method_id) VALUES (1, 4) ON CONFLICT DO NOTHING",
     "seedPermClienteListProducts": "INSERT INTO permission_method (profile_id, method_id) VALUES (2, 3) ON CONFLICT DO NOTHING",
+    "seedUserAdmin": "INSERT INTO users (user_na, user_pw, profile_id, status_id) VALUES ('admin1', 'Admin123', 1, 1) ON CONFLICT (user_na) DO NOTHING",
     "seedUserCliente": "INSERT INTO users (user_na, user_pw, profile_id, status_id) VALUES ('cliente1', 'Cliente123', 2, 1) ON CONFLICT (user_na) DO NOTHING",
     "seedProfileVendedor": "INSERT INTO profile (profile_id, profile_na) VALUES (3, 'Vendedor') ON CONFLICT (profile_id) DO NOTHING",
     "seedPermVendedorInsertProduct": "INSERT INTO permission_method (profile_id, method_id) VALUES (3, 4) ON CONFLICT DO NOTHING",

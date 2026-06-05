@@ -256,6 +256,7 @@ app.post('/admin/grantOption', async (req, res) => {
             ['model', 'seedPermVendedorInsertProduct'],
             ['products', 'seedProduct1'],
             ['products', 'seedProduct2'],
+            ['model', 'seedUserAdmin'],
             ['model', 'seedUserCliente'],
             ['model', 'seedUserVendedor'],
             ['model', 'seedUserMixto'],
