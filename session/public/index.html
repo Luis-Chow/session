@@ -36,6 +36,37 @@
     </form>
 
     <section id="panel" class="panel hidden">
+      <p id="whoami" class="whoami"></p>
+
+      <div class="products">
+        <h2>Productos</h2>
+        <div class="prod-form">
+          <input id="prodName" type="text" placeholder="Nombre del producto">
+          <input id="prodPrice" type="number" step="0.01" placeholder="Precio">
+        </div>
+        <div class="panel-actions">
+          <button id="btnList" type="button">Ver productos</button>
+          <button id="btnInsert" type="button">Cargar producto</button>
+        </div>
+        <p id="prodMsg" class="msg"></p>
+        <div id="productList" class="product-list"></div>
+      </div>
+
+      <div id="adminPanel" class="admin hidden">
+        <h2>Admin · Gestión de permisos</h2>
+        <div class="grant-row">
+          <select id="gmProfile" title="Perfil"></select>
+          <select id="gmMethod" title="Método"></select>
+          <button id="btnGrantMethod" type="button">Otorgar método</button>
+        </div>
+        <div class="grant-row">
+          <select id="goProfile" title="Perfil"></select>
+          <select id="goOption" title="Opción"></select>
+          <button id="btnGrantOption" type="button">Otorgar opción</button>
+        </div>
+        <p id="adminMsg" class="msg"></p>
+      </div>
+
       <div class="panel-actions">
         <button id="btnLogout" type="button" class="secondary">Cerrar sesión</button>
       </div>

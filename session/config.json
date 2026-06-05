@@ -16,6 +16,7 @@
   },
   "session": {
     "secret": "123",
+    "name": "connect.sid",
     "resave": false,
     "saveUninitialized": false,
     "duration": 1800000,

@@ -6,33 +6,34 @@
 
 body {
   font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
-  background: #f0f2f5;
+  background: #18191a;
   display: flex;
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  color: #1c1e21;
+  color: #e4e6eb;
 }
 
 .card {
-  background: #fff;
+  background: #242526;
   width: 100%;
-  max-width: 360px;
+  max-width: 560px;
   padding: 28px;
   border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, .08);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, .45);
 }
 
 h1 {
   font-size: 1.4rem;
   text-align: center;
   margin-bottom: 20px;
+  color: #e4e6eb;
 }
 
 .tabs {
   display: flex;
   margin-bottom: 20px;
-  border-bottom: 1px solid #ddd;
+  border-bottom: 1px solid #3e4042;
 }
 
 .tab {
@@ -43,12 +44,12 @@ h1 {
   border-bottom: 2px solid transparent;
   cursor: pointer;
   font-size: .95rem;
-  color: #65676b;
+  color: #b0b3b8;
 }
 
 .tab.active {
-  color: #1877f2;
-  border-bottom-color: #1877f2;
+  color: #2d88ff;
+  border-bottom-color: #2d88ff;
   font-weight: 600;
 }
 
@@ -63,19 +64,25 @@ label {
   flex-direction: column;
   gap: 6px;
   font-size: .85rem;
-  color: #65676b;
+  color: #b0b3b8;
 }
 
 input {
   padding: 10px;
-  border: 1px solid #ccd0d5;
+  border: 1px solid #3e4042;
   border-radius: 8px;
   font-size: 1rem;
+  background: #3a3b3c;
+  color: #e4e6eb;
+}
+
+input::placeholder {
+  color: #8a8d91;
 }
 
 input:focus {
   outline: none;
-  border-color: #1877f2;
+  border-color: #2d88ff;
 }
 
 .hint {
@@ -89,7 +96,7 @@ button[type="submit"],
   padding: 11px;
   border: none;
   border-radius: 8px;
-  background: #1877f2;
+  background: #2d88ff;
   color: #fff;
   font-size: 1rem;
   cursor: pointer;
@@ -97,7 +104,7 @@ button[type="submit"],
 
 button[type="submit"]:hover,
 .panel-actions button:hover {
-  background: #166fe5;
+  background: #2570d6;
 }
 
 .panel-actions {
@@ -111,16 +118,16 @@ button[type="submit"]:hover,
 }
 
 .panel-actions .secondary {
-  background: #e4e6eb;
-  color: #1c1e21;
+  background: #3a3b3c;
+  color: #e4e6eb;
 }
 
 .panel-actions .secondary:hover {
-  background: #d8dadf;
+  background: #4e4f50;
 }
 
 .panel pre {
-  background: #f0f2f5;
+  background: #3a3b3c;
   padding: 12px;
   border-radius: 8px;
   font-size: .8rem;
@@ -137,11 +144,101 @@ button[type="submit"]:hover,
 }
 
 .msg.ok {
-  color: #1a7f37;
+  color: #4ade80;
 }
 
 .msg.error {
-  color: #d93025;
+  color: #f87171;
+}
+
+.whoami {
+  text-align: center;
+  font-size: .9rem;
+  margin-bottom: 16px;
+  padding: 8px;
+  background: #3a3b3c;
+  border-radius: 8px;
+  color: #e4e6eb;
+}
+
+.products h2 {
+  font-size: 1.1rem;
+  margin-bottom: 12px;
+  color: #e4e6eb;
+}
+
+.prod-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+
+.product-list {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.product-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: #3a3b3c;
+  border-radius: 8px;
+  font-size: .9rem;
+  color: #e4e6eb;
+}
+
+.product-item .price {
+  font-weight: 600;
+  color: #4ade80;
+}
+
+.admin {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid #3e4042;
+}
+
+.admin h2 {
+  font-size: 1.05rem;
+  margin-bottom: 12px;
+  color: #e4e6eb;
+}
+
+.grant-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+  align-items: center;
+}
+
+.grant-row select {
+  flex: 1;
+  min-width: 0;
+  padding: 9px;
+  border: 1px solid #3e4042;
+  border-radius: 8px;
+  background: #3a3b3c;
+  color: #e4e6eb;
+  font-size: .82rem;
+}
+
+.grant-row button {
+  padding: 9px 12px;
+  border: none;
+  border-radius: 8px;
+  background: #2d88ff;
+  color: #fff;
+  font-size: .82rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.grant-row button:hover {
+  background: #2570d6;
 }
 
 .hidden {
