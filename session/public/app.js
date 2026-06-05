@@ -8,6 +8,12 @@ const M_INSERT = 'insertProduct';
 // Firma de permiso, mismo formato que arma el backend: subsystem-object-method.
 const sig = (m) => [SUBSYSTEM, OBJECT, m].join('-');
 
+// Identificadores para listar usuarios (subsistema security, objeto User).
+const SEC_SUBSYSTEM = 'security';
+const SEC_OBJECT = 'User';
+const M_LIST_USERS = 'listUsers';
+const sigUser = (m) => [SEC_SUBSYSTEM, SEC_OBJECT, m].join('-');
+
 const tabLogin = $('#tabLogin');
 const tabRegister = $('#tabRegister');
 const formLogin = $('#formLogin');
@@ -24,6 +30,11 @@ const prodName = $('#prodName');
 const prodPrice = $('#prodPrice');
 const prodMsg = $('#prodMsg');
 const productList = $('#productList');
+
+const usersSection = $('#usersSection');
+const btnListUsers = $('#btnListUsers');
+const usersMsg = $('#usersMsg');
+const userList = $('#userList');
 
 const adminPanel = $('#adminPanel');
 const gmProfile = $('#gmProfile');
@@ -78,13 +89,18 @@ function renderSession(session, permissions, canManage) {
   btnInsert.classList.toggle('hidden', !puedeCargar);
   prodName.classList.toggle('hidden', !puedeCargar);
   prodPrice.classList.toggle('hidden', !puedeCargar);
+  // Seccion de usuarios: visible solo si el perfil tiene el metodo listUsers.
+  const puedeVerUsuarios = (permissions || []).includes(sigUser(M_LIST_USERS));
+  usersSection.classList.toggle('hidden', !puedeVerUsuarios);
   // Panel de admin: visible solo si el perfil tiene la opcion managePermissions.
   adminPanel.classList.toggle('hidden', !canManage);
   adminMsg.textContent = '';
   if (canManage) loadCatalog();
-  // Limpia el estado de productos al entrar.
+  // Limpia el estado de productos y usuarios al entrar.
   prodMsg.textContent = '';
   productList.innerHTML = '';
+  usersMsg.textContent = '';
+  userList.innerHTML = '';
 }
 
 function renderLoggedOut() {
@@ -126,13 +142,18 @@ $('#btnLogout').addEventListener('click', async () => {
   renderLoggedOut();
 });
 
-// ---- Productos (vía /toProcess) ----
-// Toda operación de negocio se pide igual: subsystem + objectName + methodName.
-async function toProcess(methodName, params) {
+// ---- Llamada genérica de negocio (vía /toProcess) ----
+// Toda operación se pide igual: subsystem + objectName + methodName.
+async function callMethod(subsystem, objectName, methodName, params) {
   return api('/toProcess', {
     method: 'POST',
-    body: JSON.stringify({ subsystem: SUBSYSTEM, objectName: OBJECT, methodName, params })
+    body: JSON.stringify({ subsystem, objectName, methodName, params })
   });
+}
+
+// ---- Productos ----
+async function toProcess(methodName, params) {
+  return callMethod(SUBSYSTEM, OBJECT, methodName, params);
 }
 
 function showProdMsg(text, ok) {
@@ -184,6 +205,44 @@ btnInsert.addEventListener('click', async () => {
   } else {
     // Aquí es donde el Cliente verá "Acceso denegado" (403).
     showProdMsg(data.msg || 'No se pudo cargar.', false);
+  }
+});
+
+// ---- Usuarios (vía /toProcess, método security/User/listUsers) ----
+function showUsersMsg(text, ok) {
+  usersMsg.textContent = text || '';
+  usersMsg.className = 'msg ' + (ok ? 'ok' : 'error');
+}
+
+function renderUsers(rows) {
+  userList.innerHTML = '';
+  if (!rows || !rows.length) {
+    userList.innerHTML = '<div class="product-item">Sin usuarios.</div>';
+    return;
+  }
+  for (const u of rows) {
+    const item = document.createElement('div');
+    item.className = 'product-item';
+    const nameSpan = document.createElement('span');
+    nameSpan.textContent = `#${u.user_id} · ${u.user_na}`;   // textContent: NO ejecuta HTML (evita XSS)
+    const metaSpan = document.createElement('span');
+    metaSpan.className = 'price';
+    // 'profiles' viene como "2,3" (todos los perfiles del modelo muchos-a-muchos).
+    const profs = String(u.profiles || u.profile_id || '').split(',').filter(Boolean);
+    metaSpan.textContent = (profs.length > 1 ? 'perfiles ' : 'perfil ') + profs.join(', ');
+    item.appendChild(nameSpan);
+    item.appendChild(metaSpan);
+    userList.appendChild(item);
+  }
+}
+
+btnListUsers.addEventListener('click', async () => {
+  const { ok, data } = await callMethod(SEC_SUBSYSTEM, SEC_OBJECT, M_LIST_USERS, []);
+  if (ok) {
+    renderUsers(data.data);
+    showUsersMsg(`${data.data.length} usuario(s).`, true);
+  } else {
+    showUsersMsg(data.msg || 'No se pudo listar usuarios.', false);
   }
 });
 

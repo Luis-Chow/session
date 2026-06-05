@@ -4,7 +4,7 @@
     "getUser": "SELECT user_id, user_na, user_pw, profile_id, status_id, person_id FROM users WHERE user_na = $1 AND user_pw = $2",
     "getDataSession": "SELECT user_id, user_na, profile_id, status_id, person_id FROM users WHERE user_na = $1",
     "insertUser": "INSERT INTO users (user_na, user_pw, profile_id, status_id) VALUES ($1, $2, $3, $4) RETURNING user_id",
-    "listUsers": "SELECT user_id, user_na, profile_id, status_id FROM users ORDER BY user_id ASC"
+    "listUsers": "SELECT u.user_id, u.user_na, u.status_id, COALESCE((SELECT string_agg(p.profile_na, ',' ORDER BY p.profile_id) FROM user_profile up JOIN profile p ON p.profile_id = up.profile_id WHERE up.user_id = u.user_id), (SELECT p2.profile_na FROM profile p2 WHERE p2.profile_id = u.profile_id)) AS profiles FROM users u ORDER BY u.user_id ASC"
   },
   "session": {
     "ping": "SELECT 1 AS ok"
