@@ -15,14 +15,11 @@ app.use(express.urlencoded({ extended: false }));
 const db = new DBComponent();
 global.dbc = db;
 
-// --- Constantes: un solo lugar para valores que antes estaban dispersos/hardcodeados ---
-const DEFAULT_PROFILE_ID = 2;   // 'Cliente': perfil estandar para auto-registro (NO admin)
-const DEFAULT_STATUS_ID = 1;    // 1 = activo
-const USER_MIN = 3, PW_MIN = 8, PW_MAX = 64;   // reglas de validacion del registro
+const DEFAULT_PROFILE_ID = 2;
+const DEFAULT_STATUS_ID = 1;
+const USER_MIN = 3, PW_MIN = 8, PW_MAX = 64;
 const MSG_MISSING_CREDENTIALS = 'Falta usuario o contraseña.';
-// Opcion que habilita el panel de gestion de permisos (solo el Admin la tiene).
 const MANAGE_OPTION = { subsystem: 'security', optionName: 'managePermissions' };
-// Perfiles del usuario para el chequeo (muchos-a-muchos), con respaldo al profile_id unico.
 const profilesOf = (data) => data.profiles || [data.profile_id];
 
 Session.initMiddleware(app);
@@ -57,7 +54,6 @@ app.post('/register', async (req, res) => {
             [user_na, user_pw, profile_id, status_id]
         );
         const newUserId = rows[0].user_id;
-        // Registra el perfil del usuario en el modelo muchos-a-muchos (user_profile).
         await db.exeQuery(db.getSentence('model', 'insertUserProfile'), [newUserId, profile_id]);
         res.status(201).json({ msg: 'Usuario creado.', user_id: newUserId });
     } catch (err) {
@@ -153,9 +149,6 @@ app.post('/toProcess', async (req, res) => {
     }
 });
 
-// --- Panel de Admin: gestion de permisos en caliente ---
-// Verifica que el usuario tenga la opcion managePermissions (usa getPermissionOption).
-// Devuelve los perfiles si pasa, o null si ya respondio con 401/403.
 function manageGuard(req, res) {
     const ses = new Session(req, db);
     if (!ses.sessionExist()) {
@@ -170,49 +163,54 @@ function manageGuard(req, res) {
     return profiles;
 }
 
-// Catalogo para poblar los desplegables del panel (perfiles, metodos, opciones).
+// Catalogo para poblar el panel de admin: perfiles, usuarios y sus asignaciones de perfil.
 app.get('/admin/catalog', async (req, res) => {
     if (!manageGuard(req, res)) return;
     try {
         const profiles = await db.exeQuery(db.getSentence('model', 'listProfiles'));
-        const methods = await db.exeQuery(db.getSentence('model', 'listMethods'));
-        const options = await db.exeQuery(db.getSentence('model', 'listOptions'));
-        res.json({ profiles, methods, options });
+        const users = await db.exeQuery(db.getSentence('security', 'listUsers'));
+        // Pares usuario-perfil ya asignados, para marcar los checkboxes del panel.
+        const userProfiles = await db.exeQuery(db.getSentence('model', 'listUserProfiles'));
+        res.json({ profiles, users, userProfiles });
     } catch (err) {
         console.error('Error en /admin/catalog:', err);
         res.status(500).json({ msg: 'Error al cargar el catálogo.' });
     }
 });
 
-// Otorga un permiso de metodo a un perfil (usa setPermissionMethod: BD + refresca cache).
-app.post('/admin/grantMethod', async (req, res) => {
+// Asigna un perfil a un usuario (inserta en user_profile; ON CONFLICT no duplica).
+app.post('/admin/assignProfile', async (req, res) => {
     if (!manageGuard(req, res)) return;
-    const { profile_id, method_id } = req.body;
-    if (!profile_id || !method_id) {
-        return res.status(400).json({ msg: 'Faltan profile_id o method_id.' });
+    const { user_id, profile_id } = req.body;
+    if (!user_id || !profile_id) {
+        return res.status(400).json({ msg: 'Faltan user_id o profile_id.' });
     }
     try {
-        await global.sec.setPermissionMethod(Number(profile_id), Number(method_id));
-        res.json({ msg: 'Permiso de método otorgado.' });
+        await db.exeQuery(db.getSentence('model', 'insertUserProfile'), [Number(user_id), Number(profile_id)]);
+        res.json({ msg: 'Perfil asignado.' });
     } catch (err) {
-        console.error('Error en /admin/grantMethod:', err);
-        res.status(500).json({ msg: 'Error al otorgar el permiso.' });
+        console.error('Error en /admin/assignProfile:', err);
+        res.status(500).json({ msg: 'Error al asignar el perfil.' });
     }
 });
 
-// Otorga un permiso de opcion a un perfil (usa setPermissionOption: BD + refresca cache).
-app.post('/admin/grantOption', async (req, res) => {
+// Retira un perfil de un usuario, sin dejarlo nunca sin ningun perfil.
+app.post('/admin/unassignProfile', async (req, res) => {
     if (!manageGuard(req, res)) return;
-    const { profile_id, option_id } = req.body;
-    if (!profile_id || !option_id) {
-        return res.status(400).json({ msg: 'Faltan profile_id o option_id.' });
+    const { user_id, profile_id } = req.body;
+    if (!user_id || !profile_id) {
+        return res.status(400).json({ msg: 'Faltan user_id o profile_id.' });
     }
     try {
-        await global.sec.setPermissionOption(Number(profile_id), Number(option_id));
-        res.json({ msg: 'Permiso de opción otorgado.' });
+        const rows = await db.exeQuery(db.getSentence('model', 'countUserProfiles'), [Number(user_id)]);
+        if (rows[0].n <= 1) {
+            return res.status(400).json({ msg: 'No se puede quitar el último perfil del usuario.' });
+        }
+        await db.exeQuery(db.getSentence('model', 'deleteUserProfile'), [Number(user_id), Number(profile_id)]);
+        res.json({ msg: 'Perfil retirado.' });
     } catch (err) {
-        console.error('Error en /admin/grantOption:', err);
-        res.status(500).json({ msg: 'Error al otorgar el permiso.' });
+        console.error('Error en /admin/unassignProfile:', err);
+        res.status(500).json({ msg: 'Error al retirar el perfil.' });
     }
 });
 
@@ -242,7 +240,6 @@ app.post('/admin/grantOption', async (req, res) => {
             ['model', 'seedSubsystemProducts'],
             ['model', 'seedObject'],
             ['model', 'seedObjectProduct'],
-            ['model', 'seedOptionExport'],
             ['model', 'seedOptionManage'],
             ['model', 'seedPermAdminManage'],
             ['model', 'seedMethodListUsers'],

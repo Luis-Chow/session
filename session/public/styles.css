@@ -241,6 +241,33 @@ button[type="submit"]:hover,
   background: #2570d6;
 }
 
+.profile-checks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.profile-checks .check {
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background: #3a3b3c;
+  border-radius: 8px;
+  font-size: .85rem;
+  color: #e4e6eb;
+  cursor: pointer;
+}
+
+.profile-checks input[type="checkbox"] {
+  width: auto;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+}
+
 .hidden {
   display: none;
 }

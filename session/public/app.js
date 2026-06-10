@@ -1,14 +1,11 @@
 const $ = (sel) => document.querySelector(sel);
 
-// Identificadores de negocio en UN solo lugar (deben coincidir con los nombres en la BD).
 const SUBSYSTEM = 'products';
 const OBJECT = 'Product';
 const M_LIST = 'listProducts';
 const M_INSERT = 'insertProduct';
-// Firma de permiso, mismo formato que arma el backend: subsystem-object-method.
 const sig = (m) => [SUBSYSTEM, OBJECT, m].join('-');
 
-// Identificadores para listar usuarios (subsistema security, objeto User).
 const SEC_SUBSYSTEM = 'security';
 const SEC_OBJECT = 'User';
 const M_LIST_USERS = 'listUsers';
@@ -37,13 +34,9 @@ const usersMsg = $('#usersMsg');
 const userList = $('#userList');
 
 const adminPanel = $('#adminPanel');
-const gmProfile = $('#gmProfile');
-const gmMethod = $('#gmMethod');
-const goProfile = $('#goProfile');
-const goOption = $('#goOption');
+const apUser = $('#apUser');
+const apProfiles = $('#apProfiles');
 const adminMsg = $('#adminMsg');
-const btnGrantMethod = $('#btnGrantMethod');
-const btnGrantOption = $('#btnGrantOption');
 
 function showMsg(text, ok = true) {
   msg.textContent = text || '';
@@ -82,21 +75,17 @@ function renderSession(session, permissions, canManage) {
     const perfiles = (session.profiles || [session.profile_id]).join(', ');
     whoami.textContent = `Conectado como ${session.user_na} (perfil ${perfiles})`;
   }
-  // Cada botón se muestra SOLO si el perfil tiene ese permiso (concepto de "opciones").
   const puedeVer = (permissions || []).includes(sig(M_LIST));
   const puedeCargar = (permissions || []).includes(sig(M_INSERT));
   btnList.classList.toggle('hidden', !puedeVer);
   btnInsert.classList.toggle('hidden', !puedeCargar);
   prodName.classList.toggle('hidden', !puedeCargar);
   prodPrice.classList.toggle('hidden', !puedeCargar);
-  // Seccion de usuarios: visible solo si el perfil tiene el metodo listUsers.
   const puedeVerUsuarios = (permissions || []).includes(sigUser(M_LIST_USERS));
   usersSection.classList.toggle('hidden', !puedeVerUsuarios);
-  // Panel de admin: visible solo si el perfil tiene la opcion managePermissions.
   adminPanel.classList.toggle('hidden', !canManage);
   adminMsg.textContent = '';
   if (canManage) loadCatalog();
-  // Limpia el estado de productos y usuarios al entrar.
   prodMsg.textContent = '';
   productList.innerHTML = '';
   usersMsg.textContent = '';
@@ -142,8 +131,6 @@ $('#btnLogout').addEventListener('click', async () => {
   renderLoggedOut();
 });
 
-// ---- Llamada genérica de negocio (vía /toProcess) ----
-// Toda operación se pide igual: subsystem + objectName + methodName.
 async function callMethod(subsystem, objectName, methodName, params) {
   return api('/toProcess', {
     method: 'POST',
@@ -151,7 +138,6 @@ async function callMethod(subsystem, objectName, methodName, params) {
   });
 }
 
-// ---- Productos ----
 async function toProcess(methodName, params) {
   return callMethod(SUBSYSTEM, OBJECT, methodName, params);
 }
@@ -203,12 +189,10 @@ btnInsert.addEventListener('click', async () => {
     const refreshed = await toProcess(M_LIST, []);
     if (refreshed.ok) renderProducts(refreshed.data.data);
   } else {
-    // Aquí es donde el Cliente verá "Acceso denegado" (403).
     showProdMsg(data.msg || 'No se pudo cargar.', false);
   }
 });
 
-// ---- Usuarios (vía /toProcess, método security/User/listUsers) ----
 function showUsersMsg(text, ok) {
   usersMsg.textContent = text || '';
   usersMsg.className = 'msg ' + (ok ? 'ok' : 'error');
@@ -224,10 +208,9 @@ function renderUsers(rows) {
     const item = document.createElement('div');
     item.className = 'product-item';
     const nameSpan = document.createElement('span');
-    nameSpan.textContent = `#${u.user_id} · ${u.user_na}`;   // textContent: NO ejecuta HTML (evita XSS)
+    nameSpan.textContent = `#${u.user_id} · ${u.user_na}`;
     const metaSpan = document.createElement('span');
     metaSpan.className = 'price';
-    // 'profiles' viene como "2,3" (todos los perfiles del modelo muchos-a-muchos).
     const profs = String(u.profiles || u.profile_id || '').split(',').filter(Boolean);
     metaSpan.textContent = (profs.length > 1 ? 'perfiles ' : 'perfil ') + profs.join(', ');
     item.appendChild(nameSpan);
@@ -246,7 +229,6 @@ btnListUsers.addEventListener('click', async () => {
   }
 });
 
-// ---- Panel de Admin (gestión de permisos) ----
 function showAdminMsg(text, ok) {
   adminMsg.textContent = text || '';
   adminMsg.className = 'msg ' + (ok ? 'ok' : 'error');
@@ -262,27 +244,66 @@ function fillSelect(sel, items, valueKey, labelFn) {
   }
 }
 
-// Pide el catálogo (perfiles, métodos, opciones) y llena los desplegables.
+let catalog = { profiles: [], users: [], userProfiles: [] };
+
+const profileLabel = (p) => `${p.profile_id} · ${p.profile_na}`;
+const userLabel = (u) => `#${u.user_id} · ${u.user_na}`;
+
+function renderUserProfiles() {
+  const userId = Number(apUser.value);
+  const assigned = new Set(
+    catalog.userProfiles.filter((up) => up.user_id === userId).map((up) => up.profile_id)
+  );
+  apProfiles.innerHTML = '';
+  for (const p of catalog.profiles) {
+    const label = document.createElement('label');
+    label.className = 'check';
+    const box = document.createElement('input');
+    box.type = 'checkbox';
+    box.checked = assigned.has(p.profile_id);
+    box.dataset.profileId = p.profile_id;
+    const span = document.createElement('span');
+    span.textContent = p.profile_na;
+    label.appendChild(box);
+    label.appendChild(span);
+    apProfiles.appendChild(label);
+  }
+}
+
 async function loadCatalog() {
   const { ok, data } = await api('/admin/catalog');
   if (!ok) return;
-  const profileLabel = (p) => `${p.profile_id} · ${p.profile_na}`;
-  fillSelect(gmProfile, data.profiles, 'profile_id', profileLabel);
-  fillSelect(goProfile, data.profiles, 'profile_id', profileLabel);
-  fillSelect(gmMethod, data.methods, 'method_id', (m) => `${m.subsystem_na}/${m.method_na}`);
-  fillSelect(goOption, data.options, 'option_id', (o) => `${o.subsystem_na}/${o.option_na}`);
+  catalog = {
+    profiles: data.profiles || [],
+    users: data.users || [],
+    userProfiles: data.userProfiles || []
+  };
+  fillSelect(apUser, catalog.users, 'user_id', userLabel);
+  renderUserProfiles();
 }
 
-btnGrantMethod.addEventListener('click', async () => {
-  const body = { profile_id: Number(gmProfile.value), method_id: Number(gmMethod.value) };
-  const { ok, data } = await api('/admin/grantMethod', { method: 'POST', body: JSON.stringify(body) });
-  showAdminMsg(data.msg, ok);
-});
+apUser.addEventListener('change', renderUserProfiles);
 
-btnGrantOption.addEventListener('click', async () => {
-  const body = { profile_id: Number(goProfile.value), option_id: Number(goOption.value) };
-  const { ok, data } = await api('/admin/grantOption', { method: 'POST', body: JSON.stringify(body) });
+apProfiles.addEventListener('change', async (e) => {
+  const box = e.target;
+  if (box.type !== 'checkbox') return;
+  const user_id = Number(apUser.value);
+  const profile_id = Number(box.dataset.profileId);
+  const assign = box.checked;
+  const path = assign ? '/admin/assignProfile' : '/admin/unassignProfile';
+  const { ok, data } = await api(path, { method: 'POST', body: JSON.stringify({ user_id, profile_id }) });
   showAdminMsg(data.msg, ok);
+  if (ok) {
+    if (assign) {
+      catalog.userProfiles.push({ user_id, profile_id });
+    } else {
+      catalog.userProfiles = catalog.userProfiles.filter(
+        (up) => !(up.user_id === user_id && up.profile_id === profile_id)
+      );
+    }
+  } else {
+    box.checked = !assign;
+  }
 });
 
 (async () => {
