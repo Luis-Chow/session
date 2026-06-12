@@ -2,6 +2,7 @@
   "security": {
     "createUserTable": "CREATE TABLE IF NOT EXISTS users (user_id SERIAL PRIMARY KEY, user_na VARCHAR(50) UNIQUE NOT NULL, user_pw VARCHAR(255) NOT NULL, profile_id INT DEFAULT 1, status_id INT DEFAULT 1, person_id INT)",
     "getUser": "SELECT user_id, user_na, user_pw, profile_id, status_id, person_id FROM users WHERE user_na = $1 AND user_pw = $2",
+    "insertUser": "INSERT INTO users (user_na, user_pw, profile_id, status_id) VALUES ($1, $2, $3, $4) RETURNING user_id",
     "listUsers": "SELECT u.user_id, u.user_na, p.profile_na FROM users u INNER JOIN profile p ON p.profile_id = u.profile_id ORDER BY u.user_id ASC"
   },
   "model": {
@@ -17,6 +18,7 @@
     "loadPermissionOption": "SELECT po.profile_id, op.option_na, s.subsystem_na FROM permission_option po INNER JOIN option op ON op.option_id = po.option_id INNER JOIN object o ON o.object_id = op.object_id INNER JOIN subsystem s ON s.subsystem_id = o.subsystem_id",
     "insertPermissionMethod": "INSERT INTO permission_method (profile_id, method_id) VALUES ($1, $2) ON CONFLICT DO NOTHING",
     "insertPermissionOption": "INSERT INTO permission_option (profile_id, option_id) VALUES ($1, $2) ON CONFLICT DO NOTHING",
+    "insertUserProfile": "INSERT INTO user_profile (user_id, profile_id) VALUES ($1, $2) ON CONFLICT DO NOTHING",
     "seedProfileAdmin": "INSERT INTO profile (profile_id, profile_na) VALUES (1, 'Administrador') ON CONFLICT (profile_id) DO NOTHING",
     "seedProfileCliente": "INSERT INTO profile (profile_id, profile_na) VALUES (2, 'Cliente') ON CONFLICT (profile_id) DO NOTHING",
     "seedSubsystemSecurity": "INSERT INTO subsystem (subsystem_id, subsystem_na) VALUES (1, 'security') ON CONFLICT (subsystem_id) DO NOTHING",

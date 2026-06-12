@@ -18,6 +18,46 @@ Session.initMiddleware(app);
 
 app.use(express.static(path.join(__dirname, 'public')));
 
+// Los registrados nacen como Cliente (perfil 2), nunca como Administrador.
+const REGISTER_PROFILE_ID = 2;
+const REGISTER_STATUS_ID = 1;
+
+app.post('/register', async (req, res) => {
+    const { user_na, user_pw } = req.body;
+    if (!user_na || !user_pw) {
+        return res.status(400).json({ msg: 'Falta usuario o contraseña.' });
+    }
+
+    const errors = [];
+    if (user_na.length < 3) errors.push('El usuario debe tener al menos 3 caracteres.');
+    if (/\s/.test(user_na)) errors.push('El usuario no debe contener espacios.');
+    if (user_pw.length < 8) errors.push('La contraseña debe tener al menos 8 caracteres.');
+    if (user_pw.length > 64) errors.push('La contraseña no debe superar los 64 caracteres.');
+    if (/\s/.test(user_pw)) errors.push('La contraseña no debe contener espacios.');
+    if (!/[a-z]/.test(user_pw)) errors.push('La contraseña debe incluir al menos una letra minúscula.');
+    if (!/[A-Z]/.test(user_pw)) errors.push('La contraseña debe incluir al menos una letra mayúscula.');
+    if (!/[0-9]/.test(user_pw)) errors.push('La contraseña debe incluir al menos un número.');
+    if (errors.length) {
+        return res.status(400).json({ msg: 'No se pudo registrar: revisa los requisitos.', errors });
+    }
+
+    try {
+        const rows = await global.dbc.exeQuery(
+            global.dbc.getSentence('security', 'insertUser'),
+            [user_na, user_pw, REGISTER_PROFILE_ID, REGISTER_STATUS_ID]
+        );
+        const newUserId = rows[0].user_id;
+        await global.dbc.exeQuery(global.dbc.getSentence('model', 'insertUserProfile'), [newUserId, REGISTER_PROFILE_ID]);
+        res.status(201).json({ msg: 'Usuario creado.', user_id: newUserId });
+    } catch (err) {
+        if (err.code === '23505') {
+            return res.status(409).json({ msg: 'El usuario ya existe.' });
+        }
+        console.error(err);
+        res.status(500).json({ msg: 'Error al crear el usuario.' });
+    }
+});
+
 app.post('/login', async (req, res) => {
     const { user_na, user_pw } = req.body;
     if (!user_na || !user_pw) {

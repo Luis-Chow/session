@@ -30,10 +30,39 @@ h1 {
   color: #e4e6eb;
 }
 
+.tabs {
+  display: flex;
+  margin-bottom: 20px;
+  border-bottom: 1px solid #3e4042;
+}
+
+.tab {
+  flex: 1;
+  padding: 10px;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  font-size: .95rem;
+  color: #b0b3b8;
+}
+
+.tab.active {
+  color: #2d88ff;
+  border-bottom-color: #2d88ff;
+  font-weight: 600;
+}
+
 .form {
   display: flex;
   flex-direction: column;
   gap: 14px;
+}
+
+.hint {
+  font-size: .78rem;
+  color: #8a8d91;
+  margin-top: -4px;
 }
 
 label {

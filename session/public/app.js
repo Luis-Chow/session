@@ -1,6 +1,10 @@
 const $ = (sel) => document.querySelector(sel);
 
+const tabLogin = $('#tabLogin');
+const tabRegister = $('#tabRegister');
+const tabs = $('.tabs');
 const formLogin = $('#formLogin');
+const formRegister = $('#formRegister');
 const panel = $('#panel');
 const msg = $('#msg');
 const title = document.querySelector('h1');
@@ -28,9 +32,22 @@ async function api(path, options = {}) {
   return { ok: res.ok, status: res.status, data };
 }
 
+function showTab(which) {
+  const isLogin = which === 'login';
+  tabLogin.classList.toggle('active', isLogin);
+  tabRegister.classList.toggle('active', !isLogin);
+  formLogin.classList.toggle('hidden', !isLogin);
+  formRegister.classList.toggle('hidden', isLogin);
+  showMsg('');
+}
+tabLogin.addEventListener('click', () => showTab('login'));
+tabRegister.addEventListener('click', () => showTab('register'));
+
 function renderSession(session) {
   title.classList.add('hidden');
+  tabs.classList.add('hidden');
   formLogin.classList.add('hidden');
+  formRegister.classList.add('hidden');
   msg.classList.add('hidden');
   panel.classList.remove('hidden');
   whoami.textContent = `Conectado como ${session.user_na} (perfil ${session.profile_id})`;
@@ -41,9 +58,25 @@ function renderSession(session) {
 function renderLoggedOut() {
   panel.classList.add('hidden');
   title.classList.remove('hidden');
-  formLogin.classList.remove('hidden');
+  tabs.classList.remove('hidden');
   msg.classList.remove('hidden');
+  showTab('login');
 }
+
+formRegister.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const body = Object.fromEntries(new FormData(formRegister));
+  const { ok, data } = await api('/register', { method: 'POST', body: JSON.stringify(body) });
+  if (ok) {
+    formRegister.reset();
+    showTab('login');
+    showMsg(data.msg, true);
+  } else if (data.errors && data.errors.length) {
+    showMsg('• ' + data.errors.join('\n• '), false);
+  } else {
+    showMsg(data.msg, false);
+  }
+});
 
 formLogin.addEventListener('submit', async (e) => {
   e.preventDefault();

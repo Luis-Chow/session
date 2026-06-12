@@ -8,7 +8,11 @@
 </head>
 <body>
   <main class="card">
-    <h1>Iniciar sesión</h1>
+    <h1>Bienvenido</h1>
+    <div class="tabs">
+      <button id="tabLogin" class="tab active" type="button">Iniciar sesión</button>
+      <button id="tabRegister" class="tab" type="button">Registrarse</button>
+    </div>
 
     <form id="formLogin" class="form">
       <label>Usuario
@@ -18,6 +22,17 @@
         <input type="password" name="user_pw" autocomplete="current-password" required>
       </label>
       <button type="submit">Entrar</button>
+    </form>
+
+    <form id="formRegister" class="form hidden">
+      <label>Usuario
+        <input type="text" name="user_na" autocomplete="username" required>
+      </label>
+      <label>Contraseña
+        <input type="password" name="user_pw" autocomplete="new-password" required>
+      </label>
+      <small class="hint">Mínimo 8 caracteres, sin espacios, con mayúscula, minúscula y número.</small>
+      <button type="submit">Crear cuenta</button>
     </form>
 
     <section id="panel" class="panel hidden">
