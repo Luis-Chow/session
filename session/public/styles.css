@@ -30,29 +30,6 @@ h1 {
   color: #e4e6eb;
 }
 
-.tabs {
-  display: flex;
-  margin-bottom: 20px;
-  border-bottom: 1px solid #3e4042;
-}
-
-.tab {
-  flex: 1;
-  padding: 10px;
-  background: none;
-  border: none;
-  border-bottom: 2px solid transparent;
-  cursor: pointer;
-  font-size: .95rem;
-  color: #b0b3b8;
-}
-
-.tab.active {
-  color: #2d88ff;
-  border-bottom-color: #2d88ff;
-  font-weight: 600;
-}
-
 .form {
   display: flex;
   flex-direction: column;
@@ -76,19 +53,9 @@ input {
   color: #e4e6eb;
 }
 
-input::placeholder {
-  color: #8a8d91;
-}
-
 input:focus {
   outline: none;
   border-color: #2d88ff;
-}
-
-.hint {
-  font-size: .78rem;
-  color: #8a8d91;
-  margin-top: -4px;
 }
 
 button[type="submit"],
@@ -126,15 +93,6 @@ button[type="submit"]:hover,
   background: #4e4f50;
 }
 
-.panel pre {
-  background: #3a3b3c;
-  padding: 12px;
-  border-radius: 8px;
-  font-size: .8rem;
-  white-space: pre-wrap;
-  word-break: break-all;
-}
-
 .msg {
   margin-top: 16px;
   text-align: center;
@@ -161,27 +119,14 @@ button[type="submit"]:hover,
   color: #e4e6eb;
 }
 
-.products h2 {
-  font-size: 1.1rem;
-  margin-bottom: 12px;
-  color: #e4e6eb;
-}
-
-.prod-form {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-bottom: 4px;
-}
-
-.product-list {
+.list {
   margin-top: 12px;
   display: flex;
   flex-direction: column;
   gap: 6px;
 }
 
-.product-item {
+.item {
   display: flex;
   justify-content: space-between;
   padding: 8px 12px;
@@ -191,81 +136,9 @@ button[type="submit"]:hover,
   color: #e4e6eb;
 }
 
-.product-item .price {
+.item .tag {
   font-weight: 600;
   color: #4ade80;
-}
-
-.admin {
-  margin-top: 20px;
-  padding-top: 16px;
-  border-top: 1px solid #3e4042;
-}
-
-.admin h2 {
-  font-size: 1.05rem;
-  margin-bottom: 12px;
-  color: #e4e6eb;
-}
-
-.grant-row {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 10px;
-  align-items: center;
-}
-
-.grant-row select {
-  flex: 1;
-  min-width: 0;
-  padding: 9px;
-  border: 1px solid #3e4042;
-  border-radius: 8px;
-  background: #3a3b3c;
-  color: #e4e6eb;
-  font-size: .82rem;
-}
-
-.grant-row button {
-  padding: 9px 12px;
-  border: none;
-  border-radius: 8px;
-  background: #2d88ff;
-  color: #fff;
-  font-size: .82rem;
-  cursor: pointer;
-  white-space: nowrap;
-}
-
-.grant-row button:hover {
-  background: #2570d6;
-}
-
-.profile-checks {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 10px;
-}
-
-.profile-checks .check {
-  flex-direction: row;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 12px;
-  background: #3a3b3c;
-  border-radius: 8px;
-  font-size: .85rem;
-  color: #e4e6eb;
-  cursor: pointer;
-}
-
-.profile-checks input[type="checkbox"] {
-  width: auto;
-  padding: 0;
-  border: none;
-  background: none;
-  cursor: pointer;
 }
 
 .hidden {

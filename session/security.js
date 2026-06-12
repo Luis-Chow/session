@@ -1,18 +1,16 @@
 const SEP = '-';
 const buildKey = (...parts) => parts.join(SEP);
 
-class Security {
+// Security_Object de la pizarra: cachea los permisos de la BD en Maps.
+const Security = class {
     constructor() {
         this.permissionMethodMap = new Map();
         this.permissionOptionMap = new Map();
+        this.loadPermissionMethod();
+        this.loadPermissionOption();
     }
 
-    async init() {
-        await this.loadPermissionMethod();
-        await this.loadPermissionOption();
-    }
-
-    // Trae todos los permisos de metodos y los guarda en permissionMethodMap
+    // BD -> Map. Key: subsystem_na-object_na-method_na-profile_id, value: true
     async loadPermissionMethod() {
         try {
             const sentence = global.dbc.getSentence('model', 'loadPermissionMethod');
@@ -25,11 +23,10 @@ class Security {
             console.log(`Seguridad: ${this.permissionMethodMap.size} permiso(s) de metodo en cache.`);
         } catch (err) {
             console.error('Error en loadPermissionMethod:', err);
-            throw err;
         }
     }
 
-    // Trae todos los permisos de opciones y los guarda en permissionOptionMap
+    // BD -> Map. Key: subsystem_na-option_na-profile_id, value: true
     async loadPermissionOption() {
         try {
             const sentence = global.dbc.getSentence('model', 'loadPermissionOption');
@@ -42,79 +39,46 @@ class Security {
             console.log(`Seguridad: ${this.permissionOptionMap.size} permiso(s) de opcion en cache.`);
         } catch (err) {
             console.error('Error en loadPermissionOption:', err);
-            throw err;
         }
     }
 
-    // Obtiene los permisos de metodo por perfil del map
-    getPermissionMethod(j, profileIds) {
-        for (const profile_id of profileIds) {
-            const key = buildKey(j.subsystem, j.objectName, j.methodName, profile_id);
-            if (this.permissionMethodMap.get(key) === true) {
-                return true;
-            }
+    // Consulta el Map (no la BD): ¿el perfil puede ejecutar este metodo?
+    getPermissionMethod(j, profile_id) {
+        const key = buildKey(j.subsystem, j.objectName, j.methodName, profile_id);
+        if (this.permissionMethodMap.has(key)) {
+            return this.permissionMethodMap.get(key);
         }
         return false;
     }
 
-    // Obtiene el perfil de los permisos de metodo y obtiene los metodos permitidos por perfil del map
-    getAllowedMethods(profileIds) {
-        const allowed = new Set();
-        for (const key of this.permissionMethodMap.keys()) {
-            const parts = key.split(SEP);
-            const profile_id = Number(parts[parts.length - 1]);
-            if (profileIds.includes(profile_id)) {
-                allowed.add(parts.slice(0, -1).join(SEP));
-            }
-        }
-        return [...allowed];
-    }
-
-    // Obtiene los permisos de opcion por perfil del map
-    getPermissionOption(j, profileIds) {
-        for (const profile_id of profileIds) {
-            const key = buildKey(j.subsystem, j.optionName, profile_id);
-            if (this.permissionOptionMap.get(key) === true) {
-                return true;
-            }
+    // Consulta el Map: ¿el perfil tiene acceso a esta opcion (de menu)?
+    getPermissionOption(j, profile_id) {
+        const key = buildKey(j.subsystem, j.optionName, profile_id);
+        if (this.permissionOptionMap.has(key)) {
+            return this.permissionOptionMap.get(key);
         }
         return false;
     }
 
-    // Otorga un permiso de metodo y actualiza el mapa
+    // Otorga un permiso de metodo en la BD y refresca el Map.
     async setPermissionMethod(profile_id, method_id) {
-        try {
-            const sentence = global.dbc.getSentence('model', 'insertPermissionMethod');
-            await global.dbc.exeQuery(sentence, [profile_id, method_id]);
-            await this.loadPermissionMethod();
-        } catch (err) {
-            console.error('Error en setPermissionMethod:', err);
-            throw err;
-        }
+        const sentence = global.dbc.getSentence('model', 'insertPermissionMethod');
+        await global.dbc.exeQuery(sentence, [profile_id, method_id]);
+        await this.loadPermissionMethod();
     }
 
-    // Otorga un permiso de opcion y actualiza el mapa
+    // Otorga un permiso de opcion en la BD y refresca el Map.
     async setPermissionOption(profile_id, option_id) {
-        try {
-            const sentence = global.dbc.getSentence('model', 'insertPermissionOption');
-            await global.dbc.exeQuery(sentence, [profile_id, option_id]);
-            await this.loadPermissionOption();
-        } catch (err) {
-            console.error('Error en setPermissionOption:', err);
-            throw err;
-        }
+        const sentence = global.dbc.getSentence('model', 'insertPermissionOption');
+        await global.dbc.exeQuery(sentence, [profile_id, option_id]);
+        await this.loadPermissionOption();
     }
 
-    // Busca la sentencia por subsistema y metodo, y la ejecuta con los parametros dados.
+    // Busca la sentencia por subsistema y metodo, y la ejecuta con sus parametros.
     async exeMethod(j) {
-        try {
-            const sentence = global.dbc.getSentence(j.subsystem, j.methodName);
-            return await global.dbc.exeQuery(sentence, j.params || []);
-        } catch (err) {
-            console.error('Error en exeMethod:', err);
-            throw err;
-        }
+        const sentence = global.dbc.getSentence(j.subsystem, j.methodName);
+        return await global.dbc.exeQuery(sentence, j.params || []);
     }
-}
+};
 
 module.exports = Security;

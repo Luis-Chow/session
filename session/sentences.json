@@ -2,12 +2,7 @@
   "security": {
     "createUserTable": "CREATE TABLE IF NOT EXISTS users (user_id SERIAL PRIMARY KEY, user_na VARCHAR(50) UNIQUE NOT NULL, user_pw VARCHAR(255) NOT NULL, profile_id INT DEFAULT 1, status_id INT DEFAULT 1, person_id INT)",
     "getUser": "SELECT user_id, user_na, user_pw, profile_id, status_id, person_id FROM users WHERE user_na = $1 AND user_pw = $2",
-    "getDataSession": "SELECT user_id, user_na, profile_id, status_id, person_id FROM users WHERE user_na = $1",
-    "insertUser": "INSERT INTO users (user_na, user_pw, profile_id, status_id) VALUES ($1, $2, $3, $4) RETURNING user_id",
-    "listUsers": "SELECT u.user_id, u.user_na, u.status_id, COALESCE((SELECT string_agg(p.profile_na, ',' ORDER BY p.profile_id) FROM user_profile up JOIN profile p ON p.profile_id = up.profile_id WHERE up.user_id = u.user_id), (SELECT p2.profile_na FROM profile p2 WHERE p2.profile_id = u.profile_id)) AS profiles FROM users u ORDER BY u.user_id ASC"
-  },
-  "session": {
-    "ping": "SELECT 1 AS ok"
+    "listUsers": "SELECT u.user_id, u.user_na, p.profile_na FROM users u INNER JOIN profile p ON p.profile_id = u.profile_id ORDER BY u.user_id ASC"
   },
   "model": {
     "createProfile": "CREATE TABLE IF NOT EXISTS profile (profile_id SERIAL PRIMARY KEY, profile_na VARCHAR(50) UNIQUE NOT NULL)",
@@ -22,46 +17,14 @@
     "loadPermissionOption": "SELECT po.profile_id, op.option_na, s.subsystem_na FROM permission_option po INNER JOIN option op ON op.option_id = po.option_id INNER JOIN object o ON o.object_id = op.object_id INNER JOIN subsystem s ON s.subsystem_id = o.subsystem_id",
     "insertPermissionMethod": "INSERT INTO permission_method (profile_id, method_id) VALUES ($1, $2) ON CONFLICT DO NOTHING",
     "insertPermissionOption": "INSERT INTO permission_option (profile_id, option_id) VALUES ($1, $2) ON CONFLICT DO NOTHING",
-    "getUserProfiles": "SELECT profile_id FROM user_profile WHERE user_id = $1",
-    "insertUserProfile": "INSERT INTO user_profile (user_id, profile_id) VALUES ($1, $2) ON CONFLICT DO NOTHING",
-    "listUserProfiles": "SELECT user_id, profile_id FROM user_profile",
-    "deleteUserProfile": "DELETE FROM user_profile WHERE user_id = $1 AND profile_id = $2",
-    "countUserProfiles": "SELECT COUNT(*)::int AS n FROM user_profile WHERE user_id = $1",
-    "listProfiles": "SELECT profile_id, profile_na FROM profile ORDER BY profile_id ASC",
-    "listMethods": "SELECT m.method_id, m.method_na, o.object_na, s.subsystem_na FROM method m INNER JOIN object o ON o.object_id = m.object_id INNER JOIN subsystem s ON s.subsystem_id = o.subsystem_id ORDER BY m.method_id ASC",
-    "listOptions": "SELECT op.option_id, op.option_na, o.object_na, s.subsystem_na FROM option op INNER JOIN object o ON o.object_id = op.object_id INNER JOIN subsystem s ON s.subsystem_id = o.subsystem_id ORDER BY op.option_id ASC",
-    "listPermissionMethod": "SELECT profile_id, method_id FROM permission_method",
-    "listPermissionOption": "SELECT profile_id, option_id FROM permission_option",
-    "seedProfile": "INSERT INTO profile (profile_id, profile_na) VALUES (1, 'Administrador') ON CONFLICT (profile_id) DO NOTHING",
-    "seedSubsystem": "INSERT INTO subsystem (subsystem_id, subsystem_na) VALUES (1, 'security') ON CONFLICT (subsystem_id) DO NOTHING",
-    "seedObject": "INSERT INTO object (object_id, object_na, subsystem_id) VALUES (1, 'User', 1) ON CONFLICT (object_id) DO NOTHING",
-    "seedOptionManage": "INSERT INTO option (option_id, option_na, object_id) VALUES (2, 'managePermissions', 1) ON CONFLICT (option_id) DO NOTHING",
-    "seedPermAdminManage": "INSERT INTO permission_option (profile_id, option_id) VALUES (1, 2) ON CONFLICT DO NOTHING",
-    "seedMethodListUsers": "INSERT INTO method (method_id, method_na, object_id) VALUES (1, 'listUsers', 1) ON CONFLICT (method_id) DO NOTHING",
-    "seedMethodInsertUser": "INSERT INTO method (method_id, method_na, object_id) VALUES (2, 'insertUser', 1) ON CONFLICT (method_id) DO NOTHING",
-    "seedPermAdminListUsers": "INSERT INTO permission_method (profile_id, method_id) VALUES (1, 1) ON CONFLICT DO NOTHING",
+    "seedProfileAdmin": "INSERT INTO profile (profile_id, profile_na) VALUES (1, 'Administrador') ON CONFLICT (profile_id) DO NOTHING",
     "seedProfileCliente": "INSERT INTO profile (profile_id, profile_na) VALUES (2, 'Cliente') ON CONFLICT (profile_id) DO NOTHING",
-    "seedSubsystemProducts": "INSERT INTO subsystem (subsystem_id, subsystem_na) VALUES (2, 'products') ON CONFLICT (subsystem_id) DO NOTHING",
-    "seedObjectProduct": "INSERT INTO object (object_id, object_na, subsystem_id) VALUES (2, 'Product', 2) ON CONFLICT (object_id) DO NOTHING",
-    "seedMethodListProducts": "INSERT INTO method (method_id, method_na, object_id) VALUES (3, 'listProducts', 2) ON CONFLICT (method_id) DO NOTHING",
-    "seedMethodInsertProduct": "INSERT INTO method (method_id, method_na, object_id) VALUES (4, 'insertProduct', 2) ON CONFLICT (method_id) DO NOTHING",
-    "seedPermAdminListProducts": "INSERT INTO permission_method (profile_id, method_id) VALUES (1, 3) ON CONFLICT DO NOTHING",
-    "seedPermAdminInsertProduct": "INSERT INTO permission_method (profile_id, method_id) VALUES (1, 4) ON CONFLICT DO NOTHING",
-    "seedPermClienteListProducts": "INSERT INTO permission_method (profile_id, method_id) VALUES (2, 3) ON CONFLICT DO NOTHING",
+    "seedSubsystemSecurity": "INSERT INTO subsystem (subsystem_id, subsystem_na) VALUES (1, 'security') ON CONFLICT (subsystem_id) DO NOTHING",
+    "seedObjectUser": "INSERT INTO object (object_id, object_na, subsystem_id) VALUES (1, 'User', 1) ON CONFLICT (object_id) DO NOTHING",
+    "seedMethodListUsers": "INSERT INTO method (method_id, method_na, object_id) VALUES (1, 'listUsers', 1) ON CONFLICT (method_id) DO NOTHING",
+    "seedPermAdminListUsers": "INSERT INTO permission_method (profile_id, method_id) VALUES (1, 1) ON CONFLICT DO NOTHING",
     "seedUserAdmin": "INSERT INTO users (user_na, user_pw, profile_id, status_id) VALUES ('admin1', 'Admin123', 1, 1) ON CONFLICT (user_na) DO NOTHING",
     "seedUserCliente": "INSERT INTO users (user_na, user_pw, profile_id, status_id) VALUES ('cliente1', 'Cliente123', 2, 1) ON CONFLICT (user_na) DO NOTHING",
-    "seedProfileVendedor": "INSERT INTO profile (profile_id, profile_na) VALUES (3, 'Vendedor') ON CONFLICT (profile_id) DO NOTHING",
-    "seedPermVendedorInsertProduct": "INSERT INTO permission_method (profile_id, method_id) VALUES (3, 4) ON CONFLICT DO NOTHING",
-    "seedUserVendedor": "INSERT INTO users (user_na, user_pw, profile_id, status_id) VALUES ('vendedor1', 'Vendedor123', 3, 1) ON CONFLICT (user_na) DO NOTHING",
-    "seedUserMixto": "INSERT INTO users (user_na, user_pw, profile_id, status_id) VALUES ('mixto1', 'Mixto123', 2, 1) ON CONFLICT (user_na) DO NOTHING",
-    "seedUserProfileMixto": "INSERT INTO user_profile (user_id, profile_id) SELECT user_id, 3 FROM users WHERE user_na = 'mixto1' ON CONFLICT DO NOTHING",
-    "backfillUserProfile": "INSERT INTO user_profile (user_id, profile_id) SELECT u.user_id, u.profile_id FROM users u WHERE EXISTS (SELECT 1 FROM profile p WHERE p.profile_id = u.profile_id) ON CONFLICT DO NOTHING"
-  },
-  "products": {
-    "createProductTable": "CREATE TABLE IF NOT EXISTS products (product_id SERIAL PRIMARY KEY, product_na VARCHAR(100) UNIQUE NOT NULL, price NUMERIC(10,2) NOT NULL DEFAULT 0)",
-    "listProducts": "SELECT product_id, product_na, price FROM products ORDER BY product_id ASC",
-    "insertProduct": "INSERT INTO products (product_na, price) VALUES ($1, $2) RETURNING product_id, product_na, price",
-    "seedProduct1": "INSERT INTO products (product_na, price) VALUES ('Teclado', 25.00) ON CONFLICT (product_na) DO NOTHING",
-    "seedProduct2": "INSERT INTO products (product_na, price) VALUES ('Mouse', 15.50) ON CONFLICT (product_na) DO NOTHING"
+    "seedUserProfile": "INSERT INTO user_profile (user_id, profile_id) SELECT user_id, profile_id FROM users ON CONFLICT DO NOTHING"
   }
 }

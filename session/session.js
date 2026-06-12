@@ -40,21 +40,14 @@ class Session {
         }
     }
 
-    async createSession(user) {
+    createSession(user) {
         try {
-            const profSentence = this.db.getSentence('model', 'getUserProfiles');
-            const profRows = await this.db.exeQuery(profSentence, [user.user_id]);
-            const profiles = profRows.length
-                ? profRows.map(r => r.profile_id)
-                : [user.profile_id];
-
             this.req.session.objectSession = {
                 "user_id": user.user_id,
                 "user_na": user.user_na,
                 "profile_id": user.profile_id,
                 "status_id": user.status_id,
-                "person_id": user.person_id,
-                "profiles": profiles
+                "person_id": user.person_id
             };
             return true;
         } catch (err) {
@@ -93,7 +86,7 @@ class Session {
             if (!user) {
                 return { "ok": false, "msg": 'Credenciales inválidas.' };
             }
-            await this.createSession(user);
+            this.createSession(user);
             return { "ok": true, "data": this.getDataSession() };
         } catch (err) {
             console.error('Error en login:', err);
