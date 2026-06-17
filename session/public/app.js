@@ -1,10 +1,11 @@
 const $ = (sel) => document.querySelector(sel);
 
-const tabLogin = $('#tabLogin');
-const tabRegister = $('#tabRegister');
-const tabs = $('.tabs');
+const ADMIN_PROFILE_ID = 1;
+
 const formLogin = $('#formLogin');
 const formRegister = $('#formRegister');
+const registerBox = $('#registerBox');
+const registerMsg = $('#registerMsg');
 const panel = $('#panel');
 const msg = $('#msg');
 const title = document.querySelector('h1');
@@ -15,6 +16,11 @@ const resultList = $('#resultList');
 function showMsg(text, ok = true) {
   msg.textContent = text || '';
   msg.className = 'msg ' + (ok ? 'ok' : 'error');
+}
+
+function showRegisterMsg(text, ok = true) {
+  registerMsg.textContent = text || '';
+  registerMsg.className = 'msg ' + (ok ? 'ok' : 'error');
 }
 
 function showResultMsg(text, ok = true) {
@@ -32,35 +38,37 @@ async function api(path, options = {}) {
   return { ok: res.ok, status: res.status, data };
 }
 
-function showTab(which) {
-  const isLogin = which === 'login';
-  tabLogin.classList.toggle('active', isLogin);
-  tabRegister.classList.toggle('active', !isLogin);
-  formLogin.classList.toggle('hidden', !isLogin);
-  formRegister.classList.toggle('hidden', isLogin);
-  showMsg('');
+// Habilita o bloquea los campos del formulario de "Crear cuenta".
+// Todos ven el bloque, pero solo el admin puede escribir y enviarlo.
+function setRegisterEnabled(enabled) {
+  for (const field of formRegister.elements) {
+    field.disabled = !enabled;
+  }
 }
-tabLogin.addEventListener('click', () => showTab('login'));
-tabRegister.addEventListener('click', () => showTab('register'));
 
 function renderSession(session) {
   title.classList.add('hidden');
-  tabs.classList.add('hidden');
   formLogin.classList.add('hidden');
-  formRegister.classList.add('hidden');
   msg.classList.add('hidden');
   panel.classList.remove('hidden');
   whoami.textContent = `Conectado como ${session.user_na} (perfil ${session.profile_id})`;
+  // El bloque de registro se muestra a todos, pero solo el administrador puede usarlo.
+  const isAdmin = session.profile_id === ADMIN_PROFILE_ID;
+  registerBox.classList.remove('hidden');
+  formRegister.reset();
+  setRegisterEnabled(isAdmin);
+  showRegisterMsg(isAdmin ? '' : 'Solo un administrador puede crear cuentas.', false);
   showResultMsg('');
   resultList.innerHTML = '';
 }
 
 function renderLoggedOut() {
   panel.classList.add('hidden');
+  registerBox.classList.add('hidden');
   title.classList.remove('hidden');
-  tabs.classList.remove('hidden');
+  formLogin.classList.remove('hidden');
   msg.classList.remove('hidden');
-  showTab('login');
+  showMsg('');
 }
 
 formRegister.addEventListener('submit', async (e) => {
@@ -69,12 +77,11 @@ formRegister.addEventListener('submit', async (e) => {
   const { ok, data } = await api('/register', { method: 'POST', body: JSON.stringify(body) });
   if (ok) {
     formRegister.reset();
-    showTab('login');
-    showMsg(data.msg, true);
+    showRegisterMsg(data.msg, true);
   } else if (data.errors && data.errors.length) {
-    showMsg('• ' + data.errors.join('\n• '), false);
+    showRegisterMsg('• ' + data.errors.join('\n• '), false);
   } else {
-    showMsg(data.msg, false);
+    showRegisterMsg(data.msg, false);
   }
 });
 
@@ -101,7 +108,7 @@ function renderUsers(rows) {
     const item = document.createElement('div');
     item.className = 'item';
     const nameSpan = document.createElement('span');
-    nameSpan.textContent = `#${u.user_id} · ${u.user_na}`;   // textContent: NO ejecuta HTML (evita XSS)
+    nameSpan.textContent = `#${u.user_id} · ${u.user_na}`;
     const profSpan = document.createElement('span');
     profSpan.className = 'tag';
     profSpan.textContent = u.profile_na;

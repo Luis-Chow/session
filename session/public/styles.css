@@ -30,27 +30,16 @@ h1 {
   color: #e4e6eb;
 }
 
-.tabs {
-  display: flex;
-  margin-bottom: 20px;
-  border-bottom: 1px solid #3e4042;
+.register-box {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid #3e4042;
 }
 
-.tab {
-  flex: 1;
-  padding: 10px;
-  background: none;
-  border: none;
-  border-bottom: 2px solid transparent;
-  cursor: pointer;
-  font-size: .95rem;
-  color: #b0b3b8;
-}
-
-.tab.active {
-  color: #2d88ff;
-  border-bottom-color: #2d88ff;
-  font-weight: 600;
+.register-box h2 {
+  font-size: 1rem;
+  margin-bottom: 14px;
+  color: #e4e6eb;
 }
 
 .form {
@@ -85,6 +74,12 @@ input {
 input:focus {
   outline: none;
   border-color: #2d88ff;
+}
+
+input:disabled,
+button:disabled {
+  opacity: .5;
+  cursor: not-allowed;
 }
 
 button[type="submit"],

@@ -18,11 +18,21 @@ Session.initMiddleware(app);
 
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Los registrados nacen como Cliente (perfil 2), nunca como Administrador.
+// Las cuentas creadas nacen como Cliente (perfil 2), nunca como Administrador.
 const REGISTER_PROFILE_ID = 2;
 const REGISTER_STATUS_ID = 1;
+// Solo este perfil puede crear cuentas nuevas.
+const ADMIN_PROFILE_ID = 1;
 
 app.post('/register', async (req, res) => {
+    const ses = new Session(req, global.dbc);
+    if (!ses.sessionExist()) {
+        return res.status(401).json({ msg: 'Debe iniciar sesión.' });
+    }
+    if (ses.getDataSession().profile_id !== ADMIN_PROFILE_ID) {
+        return res.status(403).json({ msg: 'Solo un administrador puede crear cuentas.' });
+    }
+
     const { user_na, user_pw } = req.body;
     if (!user_na || !user_pw) {
         return res.status(400).json({ msg: 'Falta usuario o contraseña.' });

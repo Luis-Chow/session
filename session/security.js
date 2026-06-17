@@ -60,20 +60,6 @@ const Security = class {
         return false;
     }
 
-    // Otorga un permiso de metodo en la BD y refresca el Map.
-    async setPermissionMethod(profile_id, method_id) {
-        const sentence = global.dbc.getSentence('model', 'insertPermissionMethod');
-        await global.dbc.exeQuery(sentence, [profile_id, method_id]);
-        await this.loadPermissionMethod();
-    }
-
-    // Otorga un permiso de opcion en la BD y refresca el Map.
-    async setPermissionOption(profile_id, option_id) {
-        const sentence = global.dbc.getSentence('model', 'insertPermissionOption');
-        await global.dbc.exeQuery(sentence, [profile_id, option_id]);
-        await this.loadPermissionOption();
-    }
-
     // Busca la sentencia por subsistema y metodo, y la ejecuta con sus parametros.
     async exeMethod(j) {
         const sentence = global.dbc.getSentence(j.subsystem, j.methodName);
