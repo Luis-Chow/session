@@ -1,7 +1,5 @@
 const $ = (sel) => document.querySelector(sel);
 
-const ADMIN_PROFILE_ID = 1;
-
 const formLogin = $('#formLogin');
 const formRegister = $('#formRegister');
 const registerBox = $('#registerBox');
@@ -52,12 +50,12 @@ function renderSession(session) {
   msg.classList.add('hidden');
   panel.classList.remove('hidden');
   whoami.textContent = `Conectado como ${session.user_na} (perfil ${session.profile_id})`;
-  // El bloque de registro se muestra a todos, pero solo el administrador puede usarlo.
-  const isAdmin = session.profile_id === ADMIN_PROFILE_ID;
+  // El bloque se muestra a todos, pero solo se habilita si la BD le concede el permiso.
+  const canRegister = !!session.canRegister;
   registerBox.classList.remove('hidden');
   formRegister.reset();
-  setRegisterEnabled(isAdmin);
-  showRegisterMsg(isAdmin ? '' : 'Solo un administrador puede crear cuentas.', false);
+  setRegisterEnabled(canRegister);
+  showRegisterMsg(canRegister ? '' : 'No tienes permiso para crear cuentas.', false);
   showResultMsg('');
   resultList.innerHTML = '';
 }

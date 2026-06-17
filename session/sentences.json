@@ -24,7 +24,9 @@
     "seedSubsystemSecurity": "INSERT INTO subsystem (subsystem_id, subsystem_na) VALUES (1, 'security') ON CONFLICT (subsystem_id) DO NOTHING",
     "seedObjectUser": "INSERT INTO object (object_id, object_na, subsystem_id) VALUES (1, 'User', 1) ON CONFLICT (object_id) DO NOTHING",
     "seedMethodListUsers": "INSERT INTO method (method_id, method_na, object_id) VALUES (1, 'listUsers', 1) ON CONFLICT (method_id) DO NOTHING",
+    "seedMethodRegister": "INSERT INTO method (method_id, method_na, object_id) VALUES (2, 'insertUser', 1) ON CONFLICT (method_id) DO NOTHING",
     "seedPermAdminListUsers": "INSERT INTO permission_method (profile_id, method_id) VALUES (1, 1) ON CONFLICT DO NOTHING",
+    "seedPermAdminRegister": "INSERT INTO permission_method (profile_id, method_id) VALUES (1, 2) ON CONFLICT DO NOTHING",
     "seedUserAdmin": "INSERT INTO users (user_na, user_pw, profile_id, status_id) VALUES ('admin1', 'Admin123', 1, 1) ON CONFLICT (user_na) DO NOTHING",
     "seedUserCliente": "INSERT INTO users (user_na, user_pw, profile_id, status_id) VALUES ('cliente1', 'Cliente123', 2, 1) ON CONFLICT (user_na) DO NOTHING",
     "seedUserProfile": "INSERT INTO user_profile (user_id, profile_id) SELECT user_id, profile_id FROM users ON CONFLICT DO NOTHING"

@@ -21,16 +21,22 @@ app.use(express.static(path.join(__dirname, 'public')));
 // Las cuentas creadas nacen como Cliente (perfil 2), nunca como Administrador.
 const REGISTER_PROFILE_ID = 2;
 const REGISTER_STATUS_ID = 1;
-// Solo este perfil puede crear cuentas nuevas.
-const ADMIN_PROFILE_ID = 1;
+
+// El permiso para crear cuentas vive en la BD (permission_method), igual que cualquier otro metodo.
+const REGISTER_J = { subsystem: 'security', objectName: 'User', methodName: 'insertUser' };
+
+// Agrega los permisos del usuario de sesion a la respuesta (no se guardan en la cookie).
+function withPermissions(data) {
+    return { ...data, canRegister: global.sec.getPermissionMethod(REGISTER_J, data.profile_id) };
+}
 
 app.post('/register', async (req, res) => {
     const ses = new Session(req, global.dbc);
     if (!ses.sessionExist()) {
         return res.status(401).json({ msg: 'Debe iniciar sesión.' });
     }
-    if (ses.getDataSession().profile_id !== ADMIN_PROFILE_ID) {
-        return res.status(403).json({ msg: 'Solo un administrador puede crear cuentas.' });
+    if (!global.sec.getPermissionMethod(REGISTER_J, ses.getDataSession().profile_id)) {
+        return res.status(403).json({ msg: 'Acceso denegado.' });
     }
 
     const { user_na, user_pw } = req.body;
@@ -79,7 +85,7 @@ app.post('/login', async (req, res) => {
         if (!result.ok) {
             return res.status(401).json({ msg: result.msg });
         }
-        res.json({ msg: 'Login OK.', objectSession: result.data });
+        res.json({ msg: 'Login OK.', objectSession: withPermissions(result.data) });
     } catch (err) {
         console.error(err);
         res.status(500).json({ msg: 'Error al iniciar sesión.' });
@@ -102,7 +108,7 @@ app.get('/me', (req, res) => {
     if (!ses.sessionExist()) {
         return res.status(401).json({ msg: 'No hay sesión activa.' });
     }
-    res.json({ objectSession: ses.getDataSession() });
+    res.json({ objectSession: withPermissions(ses.getDataSession()) });
 });
 
 // Dispatcher: toda solicitud de ejecucion de metodos entra por aqui.
@@ -160,7 +166,9 @@ app.post('/toProcess', async (req, res) => {
             ['model', 'seedSubsystemSecurity'],
             ['model', 'seedObjectUser'],
             ['model', 'seedMethodListUsers'],
+            ['model', 'seedMethodRegister'],
             ['model', 'seedPermAdminListUsers'],
+            ['model', 'seedPermAdminRegister'],
             ['model', 'seedUserAdmin'],
             ['model', 'seedUserCliente'],
             ['model', 'seedUserProfile']
