@@ -18,16 +18,22 @@ Session.initMiddleware(app);
 
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Las cuentas creadas nacen como Cliente (perfil 2), nunca como Administrador.
+// Las cuentas creadas nacen como Empleado (perfil 2), nunca como Administrador.
 const REGISTER_PROFILE_ID = 2;
 const REGISTER_STATUS_ID = 1;
 
 // El permiso para crear cuentas vive en la BD (permission_method), igual que cualquier otro metodo.
 const REGISTER_J = { subsystem: 'security', objectName: 'User', methodName: 'insertUser' };
+// Permiso para asignar/quitar perfiles a otros usuarios (tambien vive en la BD).
+const MANAGE_PROFILES_J = { subsystem: 'security', objectName: 'UserProfile', methodName: 'addUserProfile' };
 
-// Agrega los permisos del usuario de sesion a la respuesta (no se guardan en la cookie).
-function withPermissions(data) {
-    return { ...data, canRegister: global.sec.getPermissionMethod(REGISTER_J, data.profile_id) };
+// Arma la respuesta de sesion: solo los permisos (no se guardan en la cookie).
+async function withPermissions(data) {
+    return {
+        ...data,
+        canRegister: global.sec.getPermissionMethod(REGISTER_J, data.profile_id),
+        canManageProfiles: global.sec.getPermissionMethod(MANAGE_PROFILES_J, data.profile_id)
+    };
 }
 
 app.post('/register', async (req, res) => {
@@ -85,7 +91,7 @@ app.post('/login', async (req, res) => {
         if (!result.ok) {
             return res.status(401).json({ msg: result.msg });
         }
-        res.json({ msg: 'Login OK.', objectSession: withPermissions(result.data) });
+        res.json({ msg: 'Login OK.', objectSession: await withPermissions(result.data) });
     } catch (err) {
         console.error(err);
         res.status(500).json({ msg: 'Error al iniciar sesión.' });
@@ -103,12 +109,12 @@ app.post('/logout', async (req, res) => {
     }
 });
 
-app.get('/me', (req, res) => {
+app.get('/me', async (req, res) => {
     const ses = new Session(req, global.dbc);
     if (!ses.sessionExist()) {
         return res.status(401).json({ msg: 'No hay sesión activa.' });
     }
-    res.json({ objectSession: withPermissions(ses.getDataSession()) });
+    res.json({ objectSession: await withPermissions(ses.getDataSession()) });
 });
 
 // Dispatcher: toda solicitud de ejecucion de metodos entra por aqui.
@@ -162,7 +168,7 @@ app.post('/toProcess', async (req, res) => {
 
         const seeds = [
             ['model', 'seedProfileAdmin'],
-            ['model', 'seedProfileCliente'],
+            ['model', 'seedProfileEmpleado'],
             ['model', 'seedSubsystemSecurity'],
             ['model', 'seedObjectUser'],
             ['model', 'seedMethodListUsers'],
@@ -170,8 +176,17 @@ app.post('/toProcess', async (req, res) => {
             ['model', 'seedPermAdminListUsers'],
             ['model', 'seedPermAdminRegister'],
             ['model', 'seedUserAdmin'],
-            ['model', 'seedUserCliente'],
-            ['model', 'seedUserProfile']
+            ['model', 'seedUserEmpleado'],
+            ['model', 'seedUserProfile'],
+            ['model', 'seedObjectUserProfile'],
+            ['model', 'seedMethodListProfiles'],
+            ['model', 'seedMethodListUserProfiles'],
+            ['model', 'seedMethodAddUserProfile'],
+            ['model', 'seedMethodRemoveUserProfile'],
+            ['model', 'seedPermAdminListProfiles'],
+            ['model', 'seedPermAdminListUserProfiles'],
+            ['model', 'seedPermAdminAddUserProfile'],
+            ['model', 'seedPermAdminRemoveUserProfile']
         ];
         for (const [schema, id] of seeds) {
             await global.dbc.exeQuery(global.dbc.getSentence(schema, id));

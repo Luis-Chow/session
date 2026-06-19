@@ -10,6 +10,11 @@ const title = document.querySelector('h1');
 const whoami = $('#whoami');
 const resultMsg = $('#resultMsg');
 const resultList = $('#resultList');
+const manageBox = $('#manageBox');
+const userSelect = $('#userSelect');
+const profileAssignSelect = $('#profileAssignSelect');
+const manageMsg = $('#manageMsg');
+const userProfilesList = $('#userProfilesList');
 
 function showMsg(text, ok = true) {
   msg.textContent = text || '';
@@ -36,6 +41,68 @@ async function api(path, options = {}) {
   return { ok: res.ok, status: res.status, data };
 }
 
+// Atajo para invocar cualquier metodo de seguridad por el dispatcher /toProcess.
+function toProcess(objectName, methodName, params = []) {
+  return api('/toProcess', {
+    method: 'POST',
+    body: JSON.stringify({ subsystem: 'security', objectName, methodName, params })
+  });
+}
+
+function showManageMsg(text, ok = true) {
+  manageMsg.textContent = text || '';
+  manageMsg.className = 'msg ' + (ok ? 'ok' : 'error');
+}
+
+// Rellena un <select> con perfiles [{profile_id, profile_na}].
+function fillProfileOptions(select, profiles) {
+  select.innerHTML = '';
+  for (const p of profiles) {
+    const opt = document.createElement('option');
+    opt.value = p.profile_id;
+    opt.textContent = p.profile_na;
+    select.appendChild(opt);
+  }
+}
+
+// Carga los datos del bloque de admin: lista de usuarios y catalogo de perfiles.
+async function loadManageData() {
+  const usersRes = await toProcess('User', 'listUsers', []);
+  if (usersRes.ok) {
+    userSelect.innerHTML = '';
+    for (const u of usersRes.data.data) {
+      const opt = document.createElement('option');
+      opt.value = u.user_id;
+      opt.textContent = `#${u.user_id} · ${u.user_na}`;
+      userSelect.appendChild(opt);
+    }
+  }
+  const profRes = await toProcess('UserProfile', 'listProfiles', []);
+  if (profRes.ok) fillProfileOptions(profileAssignSelect, profRes.data.data);
+  await refreshUserProfiles();
+}
+
+// Muestra los perfiles que tiene asignados el usuario seleccionado.
+async function refreshUserProfiles() {
+  const user_id = Number(userSelect.value);
+  userProfilesList.innerHTML = '';
+  if (!user_id) return;
+  const res = await toProcess('UserProfile', 'listUserProfiles', [user_id]);
+  if (!res.ok) return;
+  for (const p of res.data.data) {
+    const item = document.createElement('div');
+    item.className = 'item';
+    const nameSpan = document.createElement('span');
+    nameSpan.textContent = `perfil #${p.profile_id}`;
+    const profSpan = document.createElement('span');
+    profSpan.className = 'tag';
+    profSpan.textContent = p.profile_na;
+    item.appendChild(nameSpan);
+    item.appendChild(profSpan);
+    userProfilesList.appendChild(item);
+  }
+}
+
 // Habilita o bloquea los campos del formulario de "Crear cuenta".
 // Todos ven el bloque, pero solo el admin puede escribir y enviarlo.
 function setRegisterEnabled(enabled) {
@@ -58,6 +125,16 @@ function renderSession(session) {
   showRegisterMsg(canRegister ? '' : 'No tienes permiso para crear cuentas.', false);
   showResultMsg('');
   resultList.innerHTML = '';
+
+  // Bloque de admin para asignar/quitar perfiles: solo si la BD le concede el permiso.
+  manageMsg.textContent = '';
+  userProfilesList.innerHTML = '';
+  if (session.canManageProfiles) {
+    manageBox.classList.remove('hidden');
+    loadManageData();
+  } else {
+    manageBox.classList.add('hidden');
+  }
 }
 
 function renderLoggedOut() {
@@ -132,6 +209,23 @@ $('#btnListUsers').addEventListener('click', async () => {
     resultList.innerHTML = '';
     showResultMsg(data.msg || 'Error.', false);
   }
+});
+
+// Al elegir otro usuario, mostrar los perfiles que tiene.
+userSelect.addEventListener('change', refreshUserProfiles);
+
+$('#btnAssign').addEventListener('click', async () => {
+  const params = [Number(userSelect.value), Number(profileAssignSelect.value)];
+  const { ok, data } = await toProcess('UserProfile', 'addUserProfile', params);
+  showManageMsg(ok ? 'Perfil asignado.' : (data.msg || 'Error.'), ok);
+  if (ok) refreshUserProfiles();
+});
+
+$('#btnRemove').addEventListener('click', async () => {
+  const params = [Number(userSelect.value), Number(profileAssignSelect.value)];
+  const { ok, data } = await toProcess('UserProfile', 'removeUserProfile', params);
+  showManageMsg(ok ? 'Perfil quitado.' : (data.msg || 'Error.'), ok);
+  if (ok) refreshUserProfiles();
 });
 
 // Al recargar la pagina, restaura la sesion si la cookie sigue viva.

@@ -11,6 +11,7 @@ body {
   justify-content: center;
   align-items: center;
   min-height: 100vh;
+  padding: 16px;
   color: #e4e6eb;
 }
 
@@ -23,6 +24,11 @@ body {
   box-shadow: 0 4px 24px rgba(0, 0, 0, .45);
 }
 
+/* Tras el login aparece el panel con 3 columnas: la tarjeta se ensancha solo entonces. */
+.card:has(#panel:not(.hidden)) {
+  max-width: 960px;
+}
+
 h1 {
   font-size: 1.4rem;
   text-align: center;
@@ -30,16 +36,59 @@ h1 {
   color: #e4e6eb;
 }
 
-.register-box {
+/* Contenedor de las 3 columnas. flex-wrap = se apilan en pantallas estrechas (responsivo). */
+.columns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
   margin-top: 20px;
-  padding-top: 20px;
-  border-top: 1px solid #3e4042;
+  align-items: flex-start;
 }
 
-.register-box h2 {
+/* Cada bloque (Crear cuenta / Perfiles / Listar) es una columna. */
+.box {
+  flex: 1 1 240px;
+  min-width: 0;
+  padding: 18px;
+  background: #1e1f20;
+  border: 1px solid #3e4042;
+  border-radius: 10px;
+}
+
+.box h2 {
   font-size: 1rem;
   margin-bottom: 14px;
   color: #e4e6eb;
+}
+
+/* Barra superior: identidad a la izquierda, cerrar sesion a la derecha. */
+.panel-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.panel-top .whoami {
+  flex: 1;
+  margin-bottom: 0;
+  text-align: left;
+}
+
+.panel-top button {
+  padding: 10px 16px;
+  border: none;
+  border-radius: 8px;
+  background: #3a3b3c;
+  color: #e4e6eb;
+  font-size: .9rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.panel-top button:hover {
+  background: #4e4f50;
 }
 
 .form {
@@ -167,4 +216,18 @@ button[type="submit"]:hover,
 
 .hidden {
   display: none;
+}
+
+select {
+  padding: 10px;
+  border: 1px solid #3e4042;
+  border-radius: 8px;
+  font-size: 1rem;
+  background: #3a3b3c;
+  color: #e4e6eb;
+}
+
+select:focus {
+  outline: none;
+  border-color: #2d88ff;
 }

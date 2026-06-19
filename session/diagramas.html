@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Modelo de Datos y Casos de Uso — Sistema de Hoja de Tiempo</title>
+<style>
+  :root { --azul:#1d4ed8; --gris:#475569; --bg:#f8fafc; --card:#ffffff; --line:#e2e8f0; }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family: "Segoe UI", system-ui, sans-serif; background:var(--bg); color:#0f172a; }
+  header { background:var(--azul); color:#fff; padding:24px 32px; }
+  header h1 { margin:0 0 4px; font-size:22px; }
+  header p { margin:0; opacity:.85; font-size:14px; }
+  main { max-width:1400px; margin:0 auto; padding:24px 16px 64px; }
+  section { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:20px 24px; margin-bottom:28px; box-shadow:0 1px 3px rgba(0,0,0,.05); }
+  .sec-head { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:8px; }
+  h2 { font-size:18px; margin:0; color:var(--azul); }
+  .desc { color:var(--gris); font-size:13.5px; margin:4px 0 16px; }
+  .diagram { overflow:auto; border:1px dashed var(--line); border-radius:10px; padding:16px; background:#fff; }
+  .legend { display:flex; gap:18px; flex-wrap:wrap; font-size:12.5px; color:var(--gris); margin-top:10px; }
+  .legend b { color:#0f172a; }
+  button { background:var(--azul); color:#fff; border:0; padding:8px 14px; border-radius:8px; font-size:13px; cursor:pointer; }
+  button:hover { background:#1e40af; }
+  details { margin-top:18px; }
+  summary { cursor:pointer; font-weight:600; color:var(--azul); }
+  pre { background:#0f172a; color:#e2e8f0; padding:16px; border-radius:10px; overflow:auto; font-size:12.5px; line-height:1.5; }
+  .pill { display:inline-block; font-size:11px; padding:2px 8px; border-radius:999px; background:#dbeafe; color:#1e40af; font-weight:600; }
+  .pill.green { background:#dcfce7; color:#166534; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Sistema de control de hoja de tiempo de empleados</h1>
+  <p>Proyecto Final · Modelo de Datos (estilo DB schema) y Casos de Uso</p>
+</header>
+
+<main>
+
+  <!-- ============ MODELO DE DATOS ============ -->
+  <section>
+    <div class="sec-head">
+      <h2>1 · Modelo de Datos</h2>
+      <button onclick="descargar('er','modelo-datos.svg')">⬇ Descargar imagen (SVG)</button>
+    </div>
+    <p class="desc">
+      Cada caja es una tabla con sus columnas. <b>PK</b> = clave primaria, <b>FK</b> = clave foránea.
+      Las líneas con "patita de cuervo" muestran la cardinalidad (1 a muchos).
+    </p>
+    <div class="legend">
+      <span><span class="pill green">verde</span> Subsistema de Seguridad — <b>ya construido</b> en tu código</span>
+      <span><span class="pill">azul</span> Subsistema de Negocio — <b>a construir</b></span>
+    </div>
+    <div class="diagram" id="er">
+<pre class="mermaid">
+erDiagram
+  %% ===================== SUBSISTEMA SEGURIDAD (ya existe) =====================
+  profile {
+    int profile_id PK
+    varchar profile_na
+  }
+  users {
+    int user_id PK
+    varchar user_na
+    varchar user_pw
+    int profile_id FK
+    int status_id
+    int person_id FK
+  }
+  user_profile {
+    int user_id PK
+    int profile_id PK
+  }
+  subsystem {
+    int subsystem_id PK
+    varchar subsystem_na
+  }
+  object {
+    int object_id PK
+    varchar object_na
+    int subsystem_id FK
+  }
+  method {
+    int method_id PK
+    varchar method_na
+    int object_id FK
+  }
+  option {
+    int option_id PK
+    varchar option_na
+    int object_id FK
+  }
+  permission_method {
+    int profile_id PK
+    int method_id PK
+  }
+  permission_option {
+    int profile_id PK
+    int option_id PK
+  }
+
+  %% ===================== SUBSISTEMA NEGOCIO (a construir) =====================
+  position {
+    int position_id PK
+    varchar position_na
+  }
+  person {
+    int person_id PK
+    varchar person_na
+    varchar person_ln
+    varchar person_email
+    int position_id FK
+  }
+  status {
+    int status_id PK
+    varchar status_na
+  }
+  project {
+    int project_id PK
+    varchar project_na
+    varchar project_de
+    date start_date
+    date end_date
+    int status_id FK
+  }
+  project_role {
+    int project_role_id PK
+    varchar project_role_na
+  }
+  project_role_person {
+    int prp_id PK
+    int project_id FK
+    int person_id FK
+    int project_role_id FK
+  }
+  activity {
+    int activity_id PK
+    varchar activity_na
+    varchar activity_de
+    int prp_id FK
+    int status_id FK
+  }
+  notification {
+    int notification_id PK
+    int activity_id FK
+    date notify_date
+    time notify_time
+    numeric progress_pct
+    varchar observation
+    numeric hours_spent
+  }
+  audit {
+    int audit_id PK
+    int user_id FK
+    date audit_date
+    time audit_time
+    varchar action
+    varchar description
+    varchar ip
+  }
+
+  %% ===================== RELACIONES =====================
+  profile             ||--o{ users               : "perfil activo"
+  profile             ||--o{ user_profile        : ""
+  users               ||--o{ user_profile        : ""
+  subsystem           ||--o{ object              : "contiene"
+  object              ||--o{ method              : "expone"
+  object              ||--o{ option              : "ofrece"
+  profile             ||--o{ permission_method   : ""
+  method              ||--o{ permission_method   : ""
+  profile             ||--o{ permission_option   : ""
+  option              ||--o{ permission_option   : ""
+
+  position            ||--o{ person              : "cargo"
+  person              ||--o| users               : "es usuario"
+  status              ||--o{ project             : "estatus"
+  project             ||--o{ project_role_person : "asigna"
+  person              ||--o{ project_role_person : "participa"
+  project_role        ||--o{ project_role_person : "con rol"
+  project_role_person ||--o{ activity            : "actividades"
+  status              ||--o{ activity            : "estatus"
+  activity            ||--o{ notification        : "hoja de tiempo"
+  users               ||--o{ audit               : "registra"
+</pre>
+    </div>
+  </section>
+
+  <!-- ============ CASOS DE USO ============ -->
+  <section>
+    <div class="sec-head">
+      <h2>2 · Casos de Uso</h2>
+      <button onclick="descargar('uc','casos-de-uso.svg')">⬇ Descargar imagen (SVG)</button>
+    </div>
+    <p class="desc">
+      Tres actores. El Administrador maneja la seguridad; el Líder gestiona proyectos y reportes;
+      el Empleado registra su avance (hoja de tiempo).
+    </p>
+    <div class="diagram" id="uc">
+<pre class="mermaid">
+graph LR
+  ADMIN(["👤 Administrador"])
+  LIDER(["👤 Líder de proyecto"])
+  EMP(["👤 Empleado"])
+
+  subgraph SEG["🔒 Seguridad"]
+    UC1(["CU-01 Iniciar / cerrar sesión"])
+    UC2(["CU-02 Gestionar usuarios"])
+    UC3(["CU-03 Asignar perfiles a usuario"])
+    UC4(["CU-04 Gestionar permisos"])
+    UC5(["CU-05 Consultar auditoría"])
+  end
+  subgraph PROY["📁 Proyectos"]
+    UC6(["CU-06 Mantenimiento de proyectos"])
+    UC7(["CU-07 Asignar empleados a proyecto"])
+    UC8(["CU-08 Asignar actividades según cargo"])
+    UC9(["CU-09 Notificar a su equipo"])
+  end
+  subgraph OPE["⏱️ Operación"]
+    UC10(["CU-10 Registrar avance (hoja de tiempo)"])
+    UC11(["CU-11 Consultar mi hoja de tiempo"])
+  end
+  subgraph REP["📊 Reportes"]
+    UC12(["CU-12 Hoja de tiempo general"])
+    UC13(["CU-13 Hoja de tiempo de un empleado"])
+    UC14(["CU-14 Gráficas de avance"])
+    UC15(["CU-15 Proyectos activos / culminados"])
+  end
+
+  ADMIN --- UC1
+  LIDER --- UC1
+  EMP   --- UC1
+  ADMIN --- UC2
+  ADMIN --- UC3
+  ADMIN --- UC4
+  ADMIN --- UC5
+  LIDER --- UC6
+  LIDER --- UC7
+  LIDER --- UC8
+  LIDER --- UC9
+  EMP   --- UC10
+  EMP   --- UC11
+  LIDER --- UC12
+  LIDER --- UC13
+  LIDER --- UC14
+  LIDER --- UC15
+</pre>
+    </div>
+  </section>
+
+  <!-- ============ SQL ============ -->
+  <section>
+    <h2>3 · SQL del subsistema de negocio</h2>
+    <p class="desc">El DDL en tu mismo estilo (snake_case, <code>tabla_id SERIAL</code>, <code>tabla_na</code>). Listo para pegar en <code>sentences.json</code>.</p>
+    <details open>
+      <summary>Ver script CREATE TABLE</summary>
+<pre>CREATE TABLE IF NOT EXISTS status (
+  status_id SERIAL PRIMARY KEY,
+  status_na VARCHAR(50) UNIQUE NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS position (
+  position_id SERIAL PRIMARY KEY,
+  position_na VARCHAR(50) UNIQUE NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS person (
+  person_id SERIAL PRIMARY KEY,
+  person_na VARCHAR(100) NOT NULL,
+  person_ln VARCHAR(100),
+  person_email VARCHAR(120),
+  position_id INT REFERENCES position(position_id)
+);
+
+CREATE TABLE IF NOT EXISTS project (
+  project_id SERIAL PRIMARY KEY,
+  project_na VARCHAR(100) NOT NULL,
+  project_de VARCHAR(255),
+  start_date DATE,
+  end_date DATE,
+  status_id INT REFERENCES status(status_id)
+);
+
+CREATE TABLE IF NOT EXISTS project_role (
+  project_role_id SERIAL PRIMARY KEY,
+  project_role_na VARCHAR(50) UNIQUE NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS project_role_person (
+  prp_id SERIAL PRIMARY KEY,
+  project_id      INT NOT NULL REFERENCES project(project_id),
+  person_id       INT NOT NULL REFERENCES person(person_id),
+  project_role_id INT NOT NULL REFERENCES project_role(project_role_id),
+  UNIQUE (project_id, person_id, project_role_id)
+);
+
+CREATE TABLE IF NOT EXISTS activity (
+  activity_id SERIAL PRIMARY KEY,
+  activity_na VARCHAR(100) NOT NULL,
+  activity_de VARCHAR(255),
+  prp_id      INT NOT NULL REFERENCES project_role_person(prp_id),
+  status_id   INT REFERENCES status(status_id)
+);
+
+CREATE TABLE IF NOT EXISTS notification (
+  notification_id SERIAL PRIMARY KEY,
+  activity_id  INT NOT NULL REFERENCES activity(activity_id),
+  notify_date  DATE NOT NULL,
+  notify_time  TIME NOT NULL,
+  progress_pct NUMERIC(5,2) NOT NULL,
+  observation  VARCHAR(255),
+  hours_spent  NUMERIC(5,2)
+);
+
+CREATE TABLE IF NOT EXISTS audit (
+  audit_id    SERIAL PRIMARY KEY,
+  user_id     INT REFERENCES users(user_id),
+  audit_date  DATE NOT NULL,
+  audit_time  TIME NOT NULL,
+  action      VARCHAR(20) NOT NULL,
+  description VARCHAR(255),
+  ip          VARCHAR(45)
+);</pre>
+    </details>
+  </section>
+
+</main>
+
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+  mermaid.initialize({ startOnLoad: true, theme: 'default', securityLevel: 'loose' });
+</script>
+<script>
+  // Descarga el SVG ya renderizado por Mermaid dentro del contenedor indicado.
+  function descargar(contenedorId, nombre) {
+    const svg = document.querySelector('#' + contenedorId + ' svg');
+    if (!svg) { alert('El diagrama aún se está dibujando, espera un segundo.'); return; }
+    const xml = new XMLSerializer().serializeToString(svg);
+    const blob = new Blob([xml], { type: 'image/svg+xml' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = nombre; a.click();
+    URL.revokeObjectURL(url);
+  }
+  window.descargar = descargar;
+</script>
+</body>
+</html>

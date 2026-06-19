@@ -21,31 +21,56 @@
     </form>
 
     <section id="panel" class="panel hidden">
-      <p id="whoami" class="whoami"></p>
-
-      <div class="panel-actions">
-        <button id="btnListUsers" type="button">Ejecutar listUsers</button>
-        <button id="btnLogout" type="button" class="secondary">Cerrar sesión</button>
+      <div class="panel-top">
+        <p id="whoami" class="whoami"></p>
+        <button id="btnLogout" type="button">Cerrar sesión</button>
       </div>
 
-      <!-- Solo se muestra a los administradores (ver app.js). -->
-      <section id="registerBox" class="register-box hidden">
-        <h2>Crear cuenta</h2>
-        <form id="formRegister" class="form">
-          <label>Usuario
-            <input type="text" name="user_na" autocomplete="off" required>
-          </label>
-          <label>Contraseña
-            <input type="password" name="user_pw" autocomplete="new-password" required>
-          </label>
-          <small class="hint">Mínimo 8 caracteres, sin espacios, con mayúscula, minúscula y número.</small>
-          <button type="submit">Crear cuenta</button>
-        </form>
-        <p id="registerMsg" class="msg"></p>
-      </section>
+      <!-- Los tres bloques se muestran en columnas horizontales. -->
+      <div class="columns">
+        <!-- Crear cuenta. Solo se habilita a administradores (ver app.js). -->
+        <section id="registerBox" class="box hidden">
+          <h2>Crear cuenta</h2>
+          <form id="formRegister" class="form">
+            <label>Usuario
+              <input type="text" name="user_na" autocomplete="off" required>
+            </label>
+            <label>Contraseña
+              <input type="password" name="user_pw" autocomplete="new-password" required>
+            </label>
+            <small class="hint">Mínimo 8 caracteres, sin espacios, con mayúscula, minúscula y número.</small>
+            <button type="submit">Crear cuenta</button>
+          </form>
+          <p id="registerMsg" class="msg"></p>
+        </section>
 
-      <p id="resultMsg" class="msg"></p>
-      <div id="resultList" class="list"></div>
+        <!-- Perfiles de usuarios. Solo se muestra a quien tenga permiso (ver app.js). -->
+        <section id="manageBox" class="box hidden">
+          <h2>Perfiles de usuarios</h2>
+          <label>Usuario
+            <select id="userSelect"></select>
+          </label>
+          <label>Perfil
+            <select id="profileAssignSelect"></select>
+          </label>
+          <div class="panel-actions">
+            <button id="btnAssign" type="button">Asignar</button>
+            <button id="btnRemove" type="button" class="secondary">Quitar</button>
+          </div>
+          <p id="manageMsg" class="msg"></p>
+          <div id="userProfilesList" class="list"></div>
+        </section>
+
+        <!-- Listar usuarios. Lo ve todo el mundo; el permiso se valida en el servidor. -->
+        <section id="listBox" class="box">
+          <h2>Listar usuarios</h2>
+          <div class="panel-actions">
+            <button id="btnListUsers" type="button">Ejecutar listUsers</button>
+          </div>
+          <p id="resultMsg" class="msg"></p>
+          <div id="resultList" class="list"></div>
+        </section>
+      </div>
     </section>
 
     <p id="msg" class="msg"></p>
