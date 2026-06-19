@@ -148,11 +148,12 @@ function renderLoggedOut() {
 
 formRegister.addEventListener('submit', async (e) => {
   e.preventDefault();
+  // Crear cuenta ahora entra por el dispatcher como cualquier otro metodo (insertUser).
   const body = Object.fromEntries(new FormData(formRegister));
-  const { ok, data } = await api('/register', { method: 'POST', body: JSON.stringify(body) });
+  const { ok, data } = await toProcess('User', 'insertUser', body);
   if (ok) {
     formRegister.reset();
-    showRegisterMsg(data.msg, true);
+    showRegisterMsg('Usuario creado.', true);
   } else if (data.errors && data.errors.length) {
     showRegisterMsg('• ' + data.errors.join('\n• '), false);
   } else {

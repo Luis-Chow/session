@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const config = require('./config.json');
 const DBComponent = require('./dbcomponent');
+const { AppError } = require('./dbcomponent');
 const Session = require('./session');
 const Security = require('./security');
 const path = require('path');
@@ -18,11 +19,8 @@ Session.initMiddleware(app);
 
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Las cuentas creadas nacen como Empleado (perfil 2), nunca como Administrador.
-const REGISTER_PROFILE_ID = 2;
-const REGISTER_STATUS_ID = 1;
-
 // El permiso para crear cuentas vive en la BD (permission_method), igual que cualquier otro metodo.
+// Se usa para decirle al cliente si debe habilitar el formulario de "Crear cuenta".
 const REGISTER_J = { subsystem: 'security', objectName: 'User', methodName: 'insertUser' };
 // Permiso para asignar/quitar perfiles a otros usuarios (tambien vive en la BD).
 const MANAGE_PROFILES_J = { subsystem: 'security', objectName: 'UserProfile', methodName: 'addUserProfile' };
@@ -35,50 +33,6 @@ async function withPermissions(data) {
         canManageProfiles: global.sec.getPermissionMethod(MANAGE_PROFILES_J, data.profile_id)
     };
 }
-
-app.post('/register', async (req, res) => {
-    const ses = new Session(req, global.dbc);
-    if (!ses.sessionExist()) {
-        return res.status(401).json({ msg: 'Debe iniciar sesión.' });
-    }
-    if (!global.sec.getPermissionMethod(REGISTER_J, ses.getDataSession().profile_id)) {
-        return res.status(403).json({ msg: 'Acceso denegado.' });
-    }
-
-    const { user_na, user_pw } = req.body;
-    if (!user_na || !user_pw) {
-        return res.status(400).json({ msg: 'Falta usuario o contraseña.' });
-    }
-
-    const errors = [];
-    if (user_na.length < 3) errors.push('El usuario debe tener al menos 3 caracteres.');
-    if (/\s/.test(user_na)) errors.push('El usuario no debe contener espacios.');
-    if (user_pw.length < 8) errors.push('La contraseña debe tener al menos 8 caracteres.');
-    if (user_pw.length > 64) errors.push('La contraseña no debe superar los 64 caracteres.');
-    if (/\s/.test(user_pw)) errors.push('La contraseña no debe contener espacios.');
-    if (!/[a-z]/.test(user_pw)) errors.push('La contraseña debe incluir al menos una letra minúscula.');
-    if (!/[A-Z]/.test(user_pw)) errors.push('La contraseña debe incluir al menos una letra mayúscula.');
-    if (!/[0-9]/.test(user_pw)) errors.push('La contraseña debe incluir al menos un número.');
-    if (errors.length) {
-        return res.status(400).json({ msg: 'No se pudo registrar: revisa los requisitos.', errors });
-    }
-
-    try {
-        const rows = await global.dbc.exeQuery(
-            global.dbc.getSentence('security', 'insertUser'),
-            [user_na, user_pw, REGISTER_PROFILE_ID, REGISTER_STATUS_ID]
-        );
-        const newUserId = rows[0].user_id;
-        await global.dbc.exeQuery(global.dbc.getSentence('model', 'insertUserProfile'), [newUserId, REGISTER_PROFILE_ID]);
-        res.status(201).json({ msg: 'Usuario creado.', user_id: newUserId });
-    } catch (err) {
-        if (err.code === '23505') {
-            return res.status(409).json({ msg: 'El usuario ya existe.' });
-        }
-        console.error(err);
-        res.status(500).json({ msg: 'Error al crear el usuario.' });
-    }
-});
 
 app.post('/login', async (req, res) => {
     const { user_na, user_pw } = req.body;
@@ -140,10 +94,14 @@ app.post('/toProcess', async (req, res) => {
             return res.status(403).json({ msg: 'Acceso denegado.' });
         }
 
-        // 4) ejecuta el metodo y devuelve la respuesta
-        const rows = await global.sec.exeMethod(j);
+        // 4) ejecuta el metodo (pasando la sesion) y devuelve la respuesta
+        const rows = await global.sec.exeMethod(j, data);
         return res.json({ data: rows });
     } catch (err) {
+        // Un metodo rico puede lanzar AppError con su propio status (400 validacion, 409 duplicado...).
+        if (err instanceof AppError) {
+            return res.status(err.status).json({ msg: err.message, errors: err.errors });
+        }
         console.error('Error en /toProcess:', err);
         return res.status(500).json({ msg: 'Error al procesar la solicitud.' });
     }
